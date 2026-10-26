@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MULTIVERSE ARCHIVE</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,800;0,900;1,900&family=Noto+Sans+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- 배경 캔버스 (디지털 파티클 & 그리드 애니메이션) -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- 메인 타이틀 화면 컨테이너 -->
+  <div id="main-screen" class="screen-overlay">
+    <!-- 상단 상태 표시 바 -->
+    <header class="top-nav">
+      <div class="system-status">
+        <span class="status-dot"></span>
+        <span class="status-text">SCHALE TACTICAL NETWORK ONLINE</span>
+      </div>
+      <div class="version-tag">VER 0.1.0-ALPHA</div>
+    </header>
+
+    <!-- 중앙 타이틀 섹션 -->
+    <main class="title-container">
+      <div class="halo-emblem">
+        <div class="halo-ring"></div>
+        <div class="halo-core"></div>
+      </div>
+      <div class="title-sub">KIVOTOS CRAWLING TACTICAL ROGUELIKE</div>
+      <h1 class="title-logo">
+        <span class="title-multiverse">MULTIVERSE</span>
+        <span class="title-archive">ARCHIVE</span>
+      </h1>
+      <p class="title-desc">모든 차원의 키보토스가 교차하는 로그라이크 작전</p>
+
+      <!-- 시작하기 버튼 -->
+      <div class="start-btn-wrapper">
+        <button id="btn-start" class="btn-ba-start">
+          <span class="btn-bg-glimmer"></span>
+          <span class="btn-icon">▶</span>
+          <span class="btn-label">시작하기</span>
+          <span class="btn-arrow">➔</span>
+        </button>
+      </div>
+    </main>
+
+    <!-- 하단 푸터 -->
+    <footer class="bottom-footer">
+      <span>TAP TO COMMENCE TACTICAL MISSION</span>
+    </footer>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
