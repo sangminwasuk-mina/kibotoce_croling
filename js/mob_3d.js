@@ -257,34 +257,36 @@ const JTFMob3D = (function() {
     bodyMesh.receiveShadow = true;
     root.add(bodyMesh);
 
-    // 3-2. 검은색 베레모 (머리 위에 살짝 우측으로 비스듬히 얹힘)
+    // 3-2. 검은색 베레모 (머리 큐브 상단에 완전히 밀착하여 결합)
     const beretGroup = new THREE.Group();
-    beretGroup.position.set(0.05, 1.38, -0.04);
-    beretGroup.rotation.z = -0.15; // 우측으로 삐딱하게
-    beretGroup.rotation.x = -0.05;
+    // bodyMesh(높이 1.35)의 윗면(y=0.675)에 빈틈없이 푹 눌러 씌움
+    beretGroup.position.set(0.04, 0.63, -0.02);
+    beretGroup.rotation.z = -0.12; // 우측으로 자연스럽게 삐딱
+    beretGroup.rotation.x = -0.04;
 
     const beretCrown = new THREE.Mesh(cachedGeometries.beretCrown, cachedMaterials.beret);
     const beretTop = new THREE.Mesh(cachedGeometries.beretTop, cachedMaterials.beret);
-    beretTop.position.y = 0.08;
+    beretTop.position.y = 0.07;
 
     // 베레모 측면 은색/레드 뱃지
     const badge = new THREE.Mesh(cachedGeometries.badge, cachedMaterials.badge);
-    badge.position.set(0.58, 0, 0.1);
+    badge.position.set(0.56, 0, 0.1);
     badge.rotation.y = Math.PI * 0.45;
 
     const badgeRed = new THREE.Mesh(cachedGeometries.badgeRed, cachedMaterials.badgeRed);
-    badgeRed.position.set(0.59, 0, 0.1);
+    badgeRed.position.set(0.57, 0, 0.1);
     badgeRed.rotation.y = Math.PI * 0.45;
 
     beretGroup.add(beretCrown);
     beretGroup.add(beretTop);
     beretGroup.add(badge);
     beretGroup.add(badgeRed);
-    root.add(beretGroup);
+    // bodyMesh의 자식으로 등록하여 바운스/호흡 시 일체화
+    bodyMesh.add(beretGroup);
 
     // 3-3. 핑크빛 붉은색 링 헤일로 (베레모 위 공중에 비스듬히 부유)
     const haloGroup = new THREE.Group();
-    haloGroup.position.set(0.12, 1.85, -0.08);
+    haloGroup.position.set(0.1, 1.82, -0.06);
     haloGroup.rotation.x = Math.PI * 0.22; // 앞뒤로 비스듬히 눕힘
     haloGroup.rotation.y = -Math.PI * 0.08;
 
@@ -313,9 +315,9 @@ const JTFMob3D = (function() {
       haloGroup,
       shadowMesh,
       animTime: 0,
-      baseHaloY: 1.85,
+      baseHaloY: 1.82,
       isMoving: false,
-      speed: 4.0,
+      speed: 4.5,
       targetRotationY: 0
     };
 
@@ -329,28 +331,31 @@ const JTFMob3D = (function() {
       this.userData.haloGroup.position.y = this.userData.baseHaloY + haloBob;
       this.userData.haloGroup.rotation.z = Math.sin(t * 1.5) * 0.05;
 
-      // 2. 보행 바운스 애니메이션
+      // 2. 보행 바운스 애니메이션 (베레모는 bodyMesh의 자식이므로 자동 연동)
       if (isMoving) {
         const walkBob = Math.abs(Math.sin(t * 12.0)) * 0.12;
         this.userData.bodyMesh.position.y = 0.675 + walkBob;
-        this.userData.beretGroup.position.y = 1.38 + walkBob;
         // 이동 시 몸체를 살짝 앞으로 기울임
-        this.userData.bodyMesh.rotation.x = 0.08;
+        this.userData.bodyMesh.rotation.x = 0.09;
         // 그림자 크기 축소 (공중에 뜰 때)
-        const scale = 1.0 - (walkBob * 0.8);
+        const scale = 1.0 - (walkBob * 0.7);
         this.userData.shadowMesh.scale.set(scale, scale, 1.0);
       } else {
         // 숨쉬기
         const breath = Math.sin(t * 2.5) * 0.02;
         this.userData.bodyMesh.position.y = 0.675 + breath;
-        this.userData.beretGroup.position.y = 1.38 + breath;
         this.userData.bodyMesh.rotation.x = 0;
         this.userData.shadowMesh.scale.set(1.0, 1.0, 1.0);
       }
 
-      // 3. 회전 부드럽게 보간 (Lerp)
-      const diff = this.userData.targetRotationY - root.rotation.y;
-      root.rotation.y += diff * 0.18;
+      // 3. 방향 전환 최단 각도 보간 (360도 뺑글 회전 버그 원천 차단)
+      let diff = this.userData.targetRotationY - root.rotation.y;
+      diff = ((diff + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+      root.rotation.y += diff * 0.25; // 기민하고 매끄러운 방향 전환
+
+      // 4. 턴할 때 자연스러운 코너링 뱅킹(좌우 기울기)
+      const rollTarget = isMoving ? Math.max(-0.15, Math.min(0.15, -diff * 0.35)) : 0;
+      root.rotation.z += (rollTarget - root.rotation.z) * 0.2;
     };
 
     return root;
