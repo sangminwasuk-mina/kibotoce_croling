@@ -231,6 +231,49 @@
     </div>
   </div>
 
+  <!-- 4단계: 정의실현부 본부 실내 3D 현장 탐험 화면 (PHASE 4: 3D FIELD EXPLORATION) -->
+  <div id="field-screen" class="screen-overlay full-screen-overlay hidden">
+    <!-- 상단 필드 HUD 바 -->
+    <header class="district-top-hud">
+      <div class="district-hud-left">
+        <button id="btn-exit-field" class="btn-ba-back btn-hud-back">
+          <span class="btn-back-icon">◀</span>
+          <span>자치구 지도로</span>
+        </button>
+        <div class="district-hud-title">
+          <span class="hud-sub">TRINITY JTF HEADQUARTERS // INTERIOR FIELD</span>
+          <span class="hud-main">정의실현부 본부 실내 (부원 전원 출장 중)</span>
+        </div>
+      </div>
+      <div class="district-hud-center">
+        <div class="hud-quest-banner" style="border-color: #38bdf8;">
+          <span class="hud-quest-icon">🔍</span>
+          <span>탐험 모드: 본부 내부를 직접 걸어 다니며 수색하십시오.</span>
+        </div>
+      </div>
+      <div class="district-hud-right">
+        <div class="hud-squad-badge">
+          <span>플레이어: 정실부 모브 (3D 1인)</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 3D 필드 WebGL 캔버스 컨테이너 -->
+    <div id="field-canvas-container" class="field-canvas-container">
+      <!-- Three.js 캔버스가 동적으로 삽입됨 -->
+    </div>
+
+    <!-- 하단 조작 안내 -->
+    <div class="field-bottom-bar">
+      <div class="district-canvas-hint">
+        🎮 키보드 <strong>[W, A, S, D]</strong> 또는 <strong>[방향키]</strong>로 정실부 모브를 실내에서 직접 움직이세요! (다른 부원들은 전원 출장 중)
+      </div>
+      <div id="field-pos-hud" class="hud-stat field-stat-hud">
+        현재 위치: X: 0.0, Z: 1.5
+      </div>
+    </div>
+  </div>
+
   <!-- 정실부 모브 3D WebGL 뷰어 화면 -->
   <div id="mob-screen" class="screen-overlay hidden">
     <header class="top-nav">
@@ -312,41 +355,41 @@
     </main>
   </div>
 
-  <!-- 업무(퀘스트) 선택 알림 팝업 모달 (SCHALE TERMINAL) -->
+  <!-- 거점 확정/탐험 이벤트 알림 팝업 모달 (TRINITY OPERATION TERMINAL) -->
   <div id="quest-modal" class="quest-modal-overlay hidden">
     <div class="quest-modal-card">
       <div class="quest-modal-header">
-        <div class="terminal-badge">SCHALE DISPATCH TERMINAL</div>
-        <div class="quest-number" id="quest-modal-num">업무 #01 [외부 소탕 의뢰]</div>
+        <div class="terminal-badge">TRINITY OPERATION TERMINAL</div>
+        <div class="quest-number" id="quest-modal-num">확정 이벤트</div>
       </div>
       <div class="quest-modal-body">
-        <h2 class="quest-title" id="quest-modal-title">정의실현부 불량배 소탕 요청</h2>
+        <h2 class="quest-title" id="quest-modal-title">정의실현부 : 탐험</h2>
         <div class="quest-divider"></div>
         <p class="quest-desc" id="quest-modal-desc">
-          정의실현부에 외부에서 불량배 소탕 요청이 들어왔다. 최근 자치구 외곽에서 학생들을 위협하는 무장 불량배들의 은신처를 수색하여 진압하십시오.
+          정의실현부 본부. 다른 선배들과 부원들은 모두 외부 작전으로 출장을 나간 상태입니다. 혼자 남은 본부 내부를 직접 수색하고 작전을 준비하십시오.
         </p>
-        <div class="quest-route-preview">
-          <div class="route-item accept-route">✨ <strong>[수락 시]</strong>: 총 4코스 직렬 경로 개척 (정찰 ➔ 수색 ➔ 은신처 ➔ 💀보스전)</div>
-          <div class="route-item decline-route">🧭 <strong>[거절 시]</strong>: 의뢰 없이 주변 3갈래 자유 탐색로 개척</div>
+        <div class="quest-route-preview" id="quest-modal-preview">
+          <div class="route-item accept-route">🚪 <strong>[입장 안내]</strong>: 정의실현부 본부 실내 3D 필드로 진입합니다. (최초 거점으로 건너뛰기 불가)</div>
         </div>
       </div>
-      <div class="quest-modal-actions">
-        <button id="btn-quest-accept" class="btn-quest-btn accept">
-          <span>✔ 수락 (업무 1 추가 & 4코스 개척)</span>
+      <div class="quest-modal-actions" id="quest-modal-actions">
+        <button id="btn-quest-accept" class="btn-quest-btn accept" style="flex: 1;">
+          <span>🚀 입장 (본부 실내 탐험) ▶</span>
         </button>
-        <button id="btn-quest-decline" class="btn-quest-btn decline">
-          <span>✖ 거절 (자유 탐색 3갈래길)</span>
+        <button id="btn-quest-decline" class="btn-quest-btn decline" style="display: none;">
+          <span>⏭ 건너뛰기</span>
         </button>
       </div>
     </div>
   </div>
 
   <script src="js/three.min.js"></script>
-  <script src="js/mob_3d.js?v=3.2.0"></script>
-  <script src="js/mob_3d_viewer.js?v=3.2.0"></script>
-  <script src="js/district_crawler.js?v=3.2.0"></script>
-  <script src="js/map_data.js?v=3.2.0"></script>
-  <script src="js/map.js?v=3.2.0"></script>
-  <script src="js/main.js?v=3.2.0"></script>
+  <script src="js/mob_3d.js?v=3.3.0"></script>
+  <script src="js/mob_3d_viewer.js?v=3.3.0"></script>
+  <script src="js/district_crawler.js?v=3.3.0"></script>
+  <script src="js/field_explorer.js?v=3.3.0"></script>
+  <script src="js/map_data.js?v=3.3.0"></script>
+  <script src="js/map.js?v=3.3.0"></script>
+  <script src="js/main.js?v=3.3.0"></script>
 </body>
 </html>

@@ -104,6 +104,7 @@ function initBackgroundCanvas() {
 // 2. 화면 전환 및 메인 UI 인터랙션
 let mapRendererInstance = null;
 let districtCrawlerInstance = null;
+let fieldExplorerInstance = null;
 let mobShowcaseInitialized = false;
 
 // 전역 화면 흐름 컨트롤러
@@ -150,6 +151,43 @@ window.AppController = {
     const clubScreen = document.getElementById('club-screen');
     if (districtScreen) districtScreen.classList.add('hidden');
     if (clubScreen) clubScreen.classList.remove('hidden');
+  },
+
+  // 3단계(자치구 맵) -> 4단계(3D 실내 탐험 필드 진입!)
+  enterField(nodeId) {
+    console.log('[FLOW] 3단계 -> 4단계: 정의실현부 본부 실내 3D 필드 진입:', nodeId);
+    const districtScreen = document.getElementById('district-screen');
+    const fieldScreen = document.getElementById('field-screen');
+    if (districtScreen) districtScreen.classList.add('hidden');
+    if (fieldScreen) {
+      fieldScreen.classList.remove('hidden');
+      if (!fieldExplorerInstance) {
+        fieldExplorerInstance = new JTFFieldExplorer('field-canvas-container');
+      }
+      fieldExplorerInstance.start();
+    }
+  },
+
+  // 4단계(3D 실내 탐험) -> 3단계(자치구 지도로 복귀)
+  exitField() {
+    console.log('[FLOW] 4단계 -> 3단계: 자치구 대형 지도로 복귀');
+    const fieldScreen = document.getElementById('field-screen');
+    const districtScreen = document.getElementById('district-screen');
+    if (fieldExplorerInstance) {
+      fieldExplorerInstance.stop();
+    }
+    if (fieldScreen) fieldScreen.classList.add('hidden');
+    if (districtScreen) {
+      districtScreen.classList.remove('hidden');
+      if (districtCrawlerInstance) {
+        const node = districtCrawlerInstance.nodes.find(n => n.id === 'node_jtf_hq');
+        if (node) {
+          node.status = 'cleared'; // 🟢 완료
+        }
+        districtCrawlerInstance.resize();
+        districtCrawlerInstance.updateHUDText('정의실현부 본부 실내 탐험 완료 (안전 구역)');
+      }
+    }
   }
 };
 
@@ -165,6 +203,7 @@ function initMainUI() {
   const btnBackToMap = document.getElementById('btn-back-to-map');
   const btnDeployToDistrict = document.getElementById('btn-deploy-to-district');
   const btnBackToClubs = document.getElementById('btn-back-to-clubs');
+  const btnExitField = document.getElementById('btn-exit-field');
 
   // 시작하기 버튼 -> 키보토스 지도 화면
   if (btnStart) {
@@ -215,6 +254,13 @@ function initMainUI() {
   if (btnBackToClubs) {
     btnBackToClubs.addEventListener('click', () => {
       window.AppController.backToClubs();
+    });
+  }
+
+  // 4단계 (실내 탐험) 나가기 -> 3단계 (자치구 지도)
+  if (btnExitField) {
+    btnExitField.addEventListener('click', () => {
+      window.AppController.exitField();
     });
   }
 

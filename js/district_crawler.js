@@ -26,17 +26,17 @@ class TrinityDistrictCrawler {
     this.hoveredNode = null;
     this.currentNodeId = 'node_jtf_hq';
 
-    // 퀘스트 및 노드 데이터
+    // 퀘스트 및 노드 데이터 (시작 노드: 정의실현부)
     this.nodes = [
       {
         id: 'node_jtf_hq',
-        name: '정의실현부 본부 (출격 거점)',
-        enName: 'J.T.F HEADQUARTERS',
+        name: '정의실현부',
+        enName: 'JUSTICE TASK FORCE HQ',
         x: 1200,
         y: 1050,
-        status: 'active', // 🔴 빨강 (시작해야 하므로)
+        status: 'active', // 🔴 빨강 (시작 노드)
         type: 'start',
-        desc: '정의실현부의 거점이자 훈련장. 새로운 작전과 치안 유지 요청이 접수되는 곳입니다.'
+        desc: '정의실현부 본부. 다른 선배들과 부원들은 모두 외부 작전으로 출장을 나간 상태입니다.'
       }
     ];
 
@@ -377,152 +377,62 @@ class TrinityDistrictCrawler {
   handleNodeClick(node) {
     if (!node) return;
 
-    // 시작 노드 클릭 시 업무 1 팝업 모달
-    if (node.id === 'node_jtf_hq' && node.status === 'active') {
-      this.openQuest1Modal();
+    // 시작 노드 (정의실현부) 클릭 시: 확정 이벤트 [정의실현부 : 탐험] 팝업 모달
+    if (node.id === 'node_jtf_hq') {
+      this.openJTFExplorationModal(node);
       return;
     }
 
     if (node.status === 'active') {
       this.currentNodeId = node.id;
-      alert(`🚀 [거점 진입] ${node.name}\n\n정실부 모브가 해당 거점으로 이동했습니다!\n(다음 단계: 현장 3D 탐험 필드로 진입)`);
+      alert(`🚀 [거점 진입] ${node.name}\n\n정실부 모브가 해당 거점으로 이동했습니다!`);
     } else if (node.status === 'pending') {
       alert(`🔒 [선행 코스 필요] ${node.name}\n\n이전 거점을 먼저 클리어해야 진입할 수 있습니다.`);
     } else if (node.status === 'cleared') {
-      alert(`✅ [완료된 안전 구역] ${node.name}\n\n이미 완수된 거점입니다.`);
+      // 이미 완료된 거점도 실내 재탐험 가능
+      this.openJTFExplorationModal(node);
     }
   }
 
-  openQuest1Modal() {
+  // 정의실현부 : 탐험 모달 오픈 (최초 노드는 건너뛰기 불가, 오직 [입장] 버튼만 존재)
+  openJTFExplorationModal(node) {
     const modal = document.getElementById('quest-modal');
-    if (modal) modal.classList.remove('hidden');
+    if (!modal) return;
 
+    const modalNum = document.getElementById('quest-modal-num');
+    const modalTitle = document.getElementById('quest-modal-title');
+    const modalDesc = document.getElementById('quest-modal-desc');
+    const modalPreview = document.getElementById('quest-modal-preview');
     const btnAccept = document.getElementById('btn-quest-accept');
     const btnDecline = document.getElementById('btn-quest-decline');
 
-    if (btnAccept) {
-      btnAccept.onclick = () => {
-        this.acceptQuest1();
-        modal.classList.add('hidden');
-      };
+    if (modalNum) modalNum.innerText = '확정 이벤트';
+    if (modalTitle) modalTitle.innerText = '정의실현부 : 탐험';
+    if (modalDesc) {
+      modalDesc.innerText = '정의실현부 본부. 다른 선배들과 부원들은 모두 외부 작전으로 출장을 나간 상태입니다. 혼자 남은 본부 내부를 직접 수색하고 작전을 준비하십시오.';
+    }
+    if (modalPreview) {
+      modalPreview.innerHTML = '<div class="route-item accept-route">🚪 <strong>[입장 안내]</strong>: 정의실현부 본부 실내 3D 필드로 진입합니다. (최초 거점으로 건너뛰기 불가)</div>';
     }
 
+    // 최초 노드는 건너뛰기 불가 -> 건너뛰기 버튼 완전 숨김
     if (btnDecline) {
-      btnDecline.onclick = () => {
-        this.declineQuest1();
+      btnDecline.style.display = 'none';
+    }
+
+    // [입장] 버튼만 전체 너비로 노출
+    if (btnAccept) {
+      btnAccept.style.flex = '1';
+      btnAccept.innerHTML = '<span>🚀 입장 (본부 실내 탐험) ▶</span>';
+      btnAccept.onclick = () => {
         modal.classList.add('hidden');
+        if (window.AppController && window.AppController.enterField) {
+          window.AppController.enterField(node.id);
+        }
       };
     }
-  }
 
-  // 업무 1 [수락] 시: 4코스 직렬 노드 자동 생성
-  acceptQuest1() {
-    const startNode = this.nodes.find(n => n.id === 'node_jtf_hq');
-    if (startNode) startNode.status = 'cleared'; // 🟢 완료로 변경
-
-    // 4코스 노드 배치 (대형 맵 좌표계에 널찍하게 배치)
-    const courseNodes = [
-      {
-        id: 'node_thug_c1',
-        name: '코스 1: 교정 외곽 정찰',
-        enName: 'STAGE 1: PATROL PERIMETER',
-        x: 1050,
-        y: 800,
-        status: 'active', // 🔴 활성
-        type: 'scout',
-        desc: '교정 외곽 철조망 부근에서 불량배들의 이동 흔적을 수색합니다.'
-      },
-      {
-        id: 'node_thug_c2',
-        name: '코스 2: 골목길 단서 수색',
-        enName: 'STAGE 2: ALLEYWAY SEARCH',
-        x: 880,
-        y: 580,
-        status: 'pending', // 🟡 대기
-        type: 'investigate',
-        desc: '외곽 상가 골목길에서 버려진 탄피와 단서를 수색합니다.'
-      },
-      {
-        id: 'node_thug_c3',
-        name: '코스 3: 은신처 입구 봉쇄',
-        enName: 'STAGE 3: BLOCKADE ENTRANCE',
-        x: 720,
-        y: 380,
-        status: 'pending', // 🟡 대기
-        type: 'skirmish',
-        desc: '폐창고 은신처 입구의 불량배 경계조를 기습 무력화합니다.'
-      },
-      {
-        id: 'node_thug_c4_boss',
-        name: '코스 4: 💀 불량배 보스전 (확정)',
-        enName: 'FINAL STAGE: THUG LEADER BOSS',
-        x: 550,
-        y: 220,
-        status: 'pending', // 🟡 대기 (최종 목표)
-        type: 'boss',
-        desc: '불량배 아지트 심장부에서 무장 두목을 진압하고 의뢰를 완수합니다!'
-      }
-    ];
-
-    this.nodes.push(...courseNodes);
-    this.connections.push(
-      { from: 'node_jtf_hq', to: 'node_thug_c1' },
-      { from: 'node_thug_c1', to: 'node_thug_c2' },
-      { from: 'node_thug_c2', to: 'node_thug_c3' },
-      { from: 'node_thug_c3', to: 'node_thug_c4_boss' }
-    );
-
-    this.updateHUDText('진행 중: [업무 1] 불량배 소탕 요청 (코스 1/4 대기)');
-    console.log('[DISTRICT CRAWLER] 4코스 직렬 노드 자동 개척 완료!');
-  }
-
-  // 업무 1 [거절] 시: 주변 3갈래 자유 탐색 노드 생성
-  declineQuest1() {
-    const startNode = this.nodes.find(n => n.id === 'node_jtf_hq');
-    if (startNode) startNode.status = 'cleared'; // 🟢 완료로 변경
-
-    const branchNodes = [
-      {
-        id: 'node_branch_1',
-        name: '분기 A: 고딕 대성당 회랑',
-        enName: 'BRANCH A: CATHEDRAL',
-        x: 1550,
-        y: 800,
-        status: 'active', // 🔴
-        type: 'event',
-        desc: '고딕 대성당 회랑에서 티파티 관계자와 조우합니다.'
-      },
-      {
-        id: 'node_branch_2',
-        name: '분기 B: 중앙 분수 광장',
-        enName: 'BRANCH B: FOUNTAIN PLAZA',
-        x: 1200,
-        y: 1350,
-        status: 'active', // 🔴
-        type: 'rest',
-        desc: '중앙 분수대 광장에서 보급품을 정비합니다.'
-      },
-      {
-        id: 'node_branch_3',
-        name: '분기 C: 구교사 카타콤 봉쇄구역',
-        enName: 'BRANCH C: CATACOMBS',
-        x: 850,
-        y: 1250,
-        status: 'active', // 🔴
-        type: 'battle',
-        desc: '접근 통제된 구교사 지하에서 정체불명의 소음을 조사합니다.'
-      }
-    ];
-
-    this.nodes.push(...branchNodes);
-    this.connections.push(
-      { from: 'node_jtf_hq', to: 'node_branch_1' },
-      { from: 'node_jtf_hq', to: 'node_branch_2' },
-      { from: 'node_jtf_hq', to: 'node_branch_3' }
-    );
-
-    this.updateHUDText('자유 탐색 모드: 3갈래 분기 경로 중 하나를 선택하십시오.');
-    console.log('[DISTRICT CRAWLER] 주변 3갈래 자유 탐색로 개척 완료!');
+    modal.classList.remove('hidden');
   }
 
   updateHUDText(text) {
