@@ -253,6 +253,359 @@ body, html {
   animation: button-glimmer 4s infinite ease-in-out;
 }
 
+/* 화면 숨김 유틸리티 */
+.hidden {
+  display: none !important;
+}
+
+/* ==========================================
+   2. 전술 작전 지도 화면 (MAP SCREEN)
+   ========================================== */
+#map-screen {
+  padding: 16px 24px;
+  background: radial-gradient(circle at center, rgba(15, 23, 42, 0.8) 0%, rgba(6, 11, 20, 0.98) 100%);
+  gap: 16px;
+}
+
+.map-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.btn-ba-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 6px;
+  color: #38bdf8;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-ba-back:hover {
+  background: rgba(14, 165, 233, 0.2);
+  border-color: #00f0ff;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+}
+
+.map-nav-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.map-title-sub {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #00f0ff;
+}
+
+.map-title-main {
+  font-size: 17px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.map-badge-phase {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #facc15;
+  background: rgba(250, 204, 21, 0.1);
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  padding: 6px 14px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
+/* 지도 메인 콘텐츠 영역 (캔버스 + 인스펙터) */
+.map-content-area {
+  flex: 1;
+  width: 100%;
+  max-width: 1400px;
+  display: flex;
+  gap: 20px;
+  min-height: 0; /* flex overflow 방지 */
+  position: relative;
+}
+
+/* 좌측 캔버스 뷰포트 */
+.map-canvas-container {
+  flex: 1;
+  position: relative;
+  background: rgba(10, 15, 26, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.7);
+}
+
+#kivotos-map-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.map-canvas-overlay-hints {
+  position: absolute;
+  bottom: 12px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+.map-hint-tag {
+  font-size: 12px;
+  color: #94a3b8;
+  background: rgba(15, 23, 42, 0.85);
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.map-legend {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #cbd5e1;
+}
+
+.legend-box {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.legend-box.unlocked {
+  background: rgba(56, 189, 248, 0.4);
+  border: 1px solid #38bdf8;
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.6);
+}
+
+.legend-box.locked {
+  background: rgba(71, 85, 105, 0.4);
+  border: 1px dashed #94a3b8;
+}
+
+/* 우측 정보 패널 (INSPECTOR) */
+.map-inspector-panel {
+  width: 360px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* 빈 상태 (미선택 시) */
+.empty-inspector {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  color: #64748b;
+  padding: 20px;
+}
+
+.inspector-radar-icon {
+  font-size: 40px;
+  animation: pulse-dot 2.5s infinite ease-in-out;
+}
+
+.inspector-empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.inspector-empty-sub {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+/* 활성화된 인스펙터 카드 */
+.inspector-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.inspector-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.inspector-emblem {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  border: 1.5px solid #38bdf8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 26px;
+}
+
+.inspector-title-area {
+  display: flex;
+  flex-direction: column;
+}
+
+.inspector-region-name {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+}
+
+.inspector-region-en {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.inspector-status-row {
+  margin-top: 14px;
+}
+
+.badge-locked {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.badge-unlocked {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid;
+}
+
+.inspector-divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(56, 189, 248, 0.15);
+  margin: 18px 0;
+}
+
+.inspector-desc-box {
+  flex: 1;
+}
+
+.inspector-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #00f0ff;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.inspector-desc {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #cbd5e1;
+}
+
+.inspector-action-area {
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.btn-region-deploy {
+  width: 100%;
+  padding: 14px;
+  border-radius: 8px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  border: 1px solid;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-region-deploy.active {
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.4);
+}
+
+.btn-region-deploy.active:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.15);
+  box-shadow: 0 0 26px rgba(0, 240, 255, 0.7);
+}
+
+.btn-region-deploy.locked {
+  background: rgba(30, 41, 59, 0.5);
+  border-color: rgba(71, 85, 105, 0.4);
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+/* 자물쇠 클릭 진동 애니메이션 */
+.shake-canvas {
+  animation: shake-it 0.25s ease;
+}
+
+@keyframes shake-it {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-4px, 2px); }
+  50% { transform: translate(4px, -2px); }
+  75% { transform: translate(-3px, -1px); }
+  100% { transform: translate(0, 0); }
+}
+
+.animate-fade {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* 하단 푸터 */
 .bottom-footer {
   font-family: 'Montserrat', sans-serif;

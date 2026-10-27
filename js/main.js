@@ -101,20 +101,42 @@ function initBackgroundCanvas() {
   requestAnimationFrame(render);
 }
 
-// 2. 메인 화면 UI 인터랙션
-function initMainUI() {
-  const btnStart = document.getElementById('btn-start');
-  if (!btnStart) return;
+// 2. 화면 전환 및 메인 UI 인터랙션
+let mapRendererInstance = null;
 
-  btnStart.addEventListener('click', () => {
-    // 버튼 클릭 피드백
-    console.log('[MULTIVERSE ARCHIVE] 작전 시작 버튼 클릭됨');
-    btnStart.style.transform = 'skewX(-8deg) scale(0.95)';
-    
-    // 다음 화면(소속 선택)으로의 전환 트리거 준비
-    setTimeout(() => {
-      btnStart.style.transform = '';
-      alert('🚀 [MULTIVERSE ARCHIVE]\n작전실 연결 완료! 다음 단계(소속 선택)를 준비 중입니다.');
-    }, 150);
-  });
+function initMainUI() {
+  const mainScreen = document.getElementById('main-screen');
+  const mapScreen = document.getElementById('map-screen');
+  const btnStart = document.getElementById('btn-start');
+  const btnBack = document.getElementById('btn-back-to-title');
+
+  if (btnStart) {
+    btnStart.addEventListener('click', () => {
+      console.log('[MULTIVERSE ARCHIVE] 작전 시작 -> 키보토스 지도 화면 진입');
+      btnStart.style.transform = 'skewX(-8deg) scale(0.95)';
+
+      setTimeout(() => {
+        btnStart.style.transform = '';
+        if (mainScreen) mainScreen.classList.add('hidden');
+        if (mapScreen) {
+          mapScreen.classList.remove('hidden');
+
+          // 지도 렌더러가 아직 없으면 생성, 이미 있으면 리사이징
+          if (!mapRendererInstance) {
+            mapRendererInstance = new KivotosMapRenderer('kivotos-map-canvas', 'map-inspector');
+          } else {
+            mapRendererInstance.resize();
+          }
+        }
+      }, 120);
+    });
+  }
+
+  if (btnBack) {
+    btnBack.addEventListener('click', () => {
+      console.log('[MULTIVERSE ARCHIVE] 메인 타이틀 화면으로 복귀');
+      if (mapScreen) mapScreen.classList.add('hidden');
+      if (mainScreen) mainScreen.classList.remove('hidden');
+    });
+  }
 }

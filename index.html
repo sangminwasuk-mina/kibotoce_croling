@@ -54,6 +54,48 @@
     </footer>
   </div>
 
+  <!-- 키보토스 전술 작전 지도 화면 (소속 학원 선택) -->
+  <div id="map-screen" class="screen-overlay hidden">
+    <!-- 전술 상단 헤더 -->
+    <header class="top-nav">
+      <div class="map-nav-left">
+        <button id="btn-back-to-title" class="btn-ba-back">
+          <span class="btn-back-icon">◀</span>
+          <span>메인으로</span>
+        </button>
+        <div class="map-nav-title">
+          <span class="map-title-sub">TACTICAL DEPLOYMENT // PHASE 1</span>
+          <span class="map-title-main">키보토스 작전 전역 지도 (소속 학원 선택)</span>
+        </div>
+      </div>
+      <div class="map-nav-right">
+        <span class="map-badge-phase">STATUS: AWAITING SELECTION</span>
+      </div>
+    </header>
+
+    <!-- 중앙 지도 영역 + 우측 인스펙터 패널 -->
+    <main class="map-content-area">
+      <!-- 좌측 캔버스 뷰포트 -->
+      <div class="map-canvas-container">
+        <canvas id="kivotos-map-canvas"></canvas>
+        <div class="map-canvas-overlay-hints">
+          <div class="map-hint-tag">💡 구역에 마우스를 올리면 상세 정보가 표시됩니다.</div>
+          <div class="map-legend">
+            <span class="legend-item"><span class="legend-box unlocked"></span>출격 가능 학원</span>
+            <span class="legend-item"><span class="legend-box locked"></span>🔒 미개척 자치구 (??? 잠김)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 우측 인스펙터 패널 -->
+      <aside id="map-inspector" class="map-inspector-panel">
+        <!-- JS로 실시간 렌더링됨 -->
+      </aside>
+    </main>
+  </div>
+
+  <script src="js/map_data.js"></script>
+  <script src="js/map.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
