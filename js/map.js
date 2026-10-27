@@ -14,10 +14,19 @@ class KivotosMapRenderer {
     this.selectedRegion = null;
     this.animTime = 0;
 
-    // 반응형 스케일 및 오프셋
+    // 카메라 줌 & 팬 상태 (전역 지도 <-> 자치구 확대 전환)
+    this.baseScale = 1.0;
     this.scale = 1.0;
-    this.offsetX = 0;
-    this.offsetY = 0;
+    this.zoomFactor = 1.0;
+    this.targetZoomFactor = 1.0;
+
+    this.camFocusX = 600;
+    this.camFocusY = 492;
+    this.targetCamFocusX = 600;
+    this.targetCamFocusY = 492;
+
+    // 퀘스트 & 노드 시스템 연동
+    this.questSystem = (typeof KivotosQuestSystem !== 'undefined') ? new KivotosQuestSystem(this) : null;
 
     this.initEvents();
     this.resize();
@@ -30,24 +39,31 @@ class KivotosMapRenderer {
     this.canvas.width = rect.width;
     this.canvas.height = rect.height;
 
-    // 1200 x 984 viewBox를 캔버스 중앙에 여백 30px 두고 피팅
+    // 1200 x 984 viewBox를 캔버스에 맞춤
     const pad = 24;
     const scaleX = (this.canvas.width - pad * 2) / this.data.viewBox.width;
     const scaleY = (this.canvas.height - pad * 2) / this.data.viewBox.height;
-    this.scale = Math.min(scaleX, scaleY);
-
-    this.offsetX = (this.canvas.width - this.data.viewBox.width * this.scale) / 2;
-    this.offsetY = (this.canvas.height - this.data.viewBox.height * this.scale) / 2;
+    this.baseScale = Math.min(scaleX, scaleY);
+    this.scale = this.baseScale * this.zoomFactor;
   }
 
   initEvents() {
     window.addEventListener('resize', () => this.resize());
 
-    // 마우스 이동 시 정확한 다각형 판정
+    // 마우스 이동 시
     this.canvas.addEventListener('mousemove', (e) => {
       const rect = this.canvas.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
+
+      // 줌인 상태일 때 노드 호버 우선 검사
+      if (this.questSystem && this.questSystem.isZoomed) {
+        const hoverNode = this.questSystem.findNodeAt(mouseX, mouseY, this);
+        if (hoverNode) {
+          this.canvas.style.cursor = 'pointer';
+          return;
+        }
+      }
 
       let found = null;
       for (const region of this.data.regions) {
@@ -60,18 +76,35 @@ class KivotosMapRenderer {
       if (this.hoveredRegion !== found) {
         this.hoveredRegion = found;
         this.canvas.style.cursor = found ? 'pointer' : 'default';
-        this.updateInspectorPanel(found);
+        if (!this.questSystem || !this.questSystem.isZoomed) {
+          this.updateInspectorPanel(found);
+        }
       }
     });
 
     this.canvas.addEventListener('mouseleave', () => {
       this.hoveredRegion = null;
       this.canvas.style.cursor = 'default';
-      this.updateInspectorPanel(this.selectedRegion);
+      if (!this.questSystem || !this.questSystem.isZoomed) {
+        this.updateInspectorPanel(this.selectedRegion);
+      }
     });
 
     // 클릭 이벤트
-    this.canvas.addEventListener('click', () => {
+    this.canvas.addEventListener('click', (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      // 1. 줌인 상태에서 노드 클릭 처리
+      if (this.questSystem && this.questSystem.isZoomed) {
+        const clickedNode = this.questSystem.findNodeAt(mouseX, mouseY, this);
+        if (clickedNode) {
+          this.questSystem.handleNodeClick(clickedNode);
+          return;
+        }
+      }
+
       if (!this.hoveredRegion) return;
 
       if (this.hoveredRegion.isLocked) {
@@ -79,24 +112,29 @@ class KivotosMapRenderer {
       } else {
         this.selectedRegion = this.hoveredRegion;
         this.updateInspectorPanel(this.hoveredRegion);
-        this.triggerSelectedFeedback(this.hoveredRegion);
       }
     });
   }
 
-  // 좌표계 변환: 캔버스 픽셀 -> 가상 맵 좌표
+  // 좌표계 변환: 캔버스 픽셀 -> 가상 맵 좌표 (카메라 줌/팬 적용)
   canvasToMap(x, y) {
+    const cx = this.canvas.width / 2;
+    const cy = this.canvas.height / 2;
+    const s = this.baseScale * this.zoomFactor;
     return {
-      x: (x - this.offsetX) / this.scale,
-      y: (y - this.offsetY) / this.scale
+      x: this.camFocusX + (x - cx) / s,
+      y: this.camFocusY + (y - cy) / s
     };
   }
 
-  // 가상 맵 좌표 -> 캔버스 픽셀
+  // 가상 맵 좌표 -> 캔버스 픽셀 (카메라 줌/팬 적용)
   mapToCanvas(x, y) {
+    const cx = this.canvas.width / 2;
+    const cy = this.canvas.height / 2;
+    const s = this.baseScale * this.zoomFactor;
     return {
-      x: this.offsetX + x * this.scale,
-      y: this.offsetY + y * this.scale
+      x: cx + (x - this.camFocusX) * s,
+      y: cy + (y - this.camFocusY) * s
     };
   }
 
@@ -131,6 +169,12 @@ class KivotosMapRenderer {
     const w = this.canvas.width;
     const h = this.canvas.height;
 
+    // 카메라 줌 & 팬 부드러운 보간 (Lerp)
+    this.zoomFactor += (this.targetZoomFactor - this.zoomFactor) * 0.08;
+    this.camFocusX += (this.targetCamFocusX - this.camFocusX) * 0.08;
+    this.camFocusY += (this.targetCamFocusY - this.camFocusY) * 0.08;
+    this.scale = this.baseScale * this.zoomFactor;
+
     ctx.clearRect(0, 0, w, h);
 
     // 1. 전술 홀로그램 배경 격자 & 서쪽 바다 해안선
@@ -151,6 +195,11 @@ class KivotosMapRenderer {
     // 5. 지역 라벨 & 엠블럼 / 자물쇠
     for (const region of this.data.regions) {
       this.drawRegionLabel(ctx, region);
+    }
+
+    // 6. 자치구 내부 세부 노드 렌더링 (퀘스트 시스템)
+    if (this.questSystem) {
+      this.questSystem.renderNodes(ctx, this);
     }
   }
 
@@ -415,6 +464,19 @@ class KivotosMapRenderer {
         <div class="inspector-desc-box">
           <div class="inspector-label">구역 정찰 브리핑</div>
           <p class="inspector-desc">${isLocked ? '이 자치구는 현재 접근 권한이 잠겨 있습니다. 이전 챕터의 미션을 완수하여 경로를 개척하십시오.' : region.desc}</p>
+          
+          ${!isLocked ? `
+            <div class="inspector-squad-box">
+              <div class="inspector-label" style="margin-top: 14px; color: #f43f5e;">출격 배속 소속</div>
+              <div class="squad-info-row">
+                <span class="squad-emblem">⚖️</span>
+                <div class="squad-text">
+                  <div class="squad-title">정의실현부 (Justice Task Force)</div>
+                  <div class="squad-unit">시작 유닛: <strong>정실부 모브 학생 1인</strong></div>
+                </div>
+              </div>
+            </div>
+          ` : ''}
         </div>
 
         <div class="inspector-action-area">
@@ -422,8 +484,8 @@ class KivotosMapRenderer {
             ? `<button class="btn-region-deploy locked" disabled>
                 <span>🔒 진입 불가 (잠김)</span>
                </button>`
-            : `<button class="btn-region-deploy active" id="btn-select-academy" style="background:linear-gradient(135deg, ${region.color}cc, ${region.color}88); border-color:${region.color};">
-                <span>🚀 [${region.shortName}] 소속으로 출격 준비</span>
+            : `<button class="btn-region-deploy active" id="btn-select-academy" style="background:linear-gradient(135deg, #0284c7, #0369a1); border-color:#38bdf8;">
+                <span>🚀 [정의실현부] 작전 개시 (진입 ▶)</span>
                </button>`
           }
         </div>
@@ -448,7 +510,92 @@ class KivotosMapRenderer {
   }
 
   triggerSelectedFeedback(region) {
-    alert(`🎯 [출격 소속 확정]\n소속 학원: ${region.name} (${region.shortName})\n\n선택한 학원의 모브 학생으로 여정을 시작합니다!`);
+    if (region.id === 'trinity') {
+      this.startTrinityOperation();
+    } else {
+      alert(`🔒 [미개방 학원] 현재 작전에서는 트리니티 종합학원만 출격 가능합니다.`);
+    }
+  }
+
+  // 트리니티 자치구로 카메라 줌인 & 작전 시작
+  startTrinityOperation() {
+    console.log('[MAP] 트리니티 종합학원 정의실현부 작전 개시 -> 줌인 연출');
+
+    // 카메라를 트리니티 중심 좌표로 확대 전환
+    this.targetZoomFactor = 2.45;
+    this.targetCamFocusX = 378;
+    this.targetCamFocusY = 287;
+
+    if (this.questSystem) {
+      this.questSystem.enterDistrict('trinity');
+
+      // 우측 인스펙터를 실시간 현장 HUD로 전환
+      this.showDistrictHUD();
+
+      // 0.7초 후 첫 번째 업무 모달 팝업 자동 호출
+      setTimeout(() => {
+        this.questSystem.handleNodeClick(this.questSystem.nodes[0]);
+      }, 700);
+    }
+  }
+
+  // 자치구 내부 현장 작전 HUD
+  showDistrictHUD() {
+    if (!this.infoPanel) return;
+
+    this.infoPanel.innerHTML = `
+      <div class="inspector-card animate-fade">
+        <div class="inspector-header">
+          <div class="inspector-emblem" style="background:rgba(239, 68, 68, 0.15); border-color:#ef4444;">
+            ⚖️
+          </div>
+          <div class="inspector-title-area">
+            <div class="inspector-region-name" style="color:#ffffff;">정의실현부 작전 본부</div>
+            <div class="inspector-region-en">TRINITY J.T.F TACTICAL OPERATION</div>
+          </div>
+        </div>
+
+        <div class="inspector-status-row">
+          <span class="badge-unlocked" style="background:rgba(239, 68, 68, 0.15); border-color:#ef4444; color:#ef4444;">
+            🔴 작전 수행 중 (모브 단독 출격)
+          </span>
+        </div>
+
+        <div class="inspector-divider"></div>
+
+        <div class="inspector-desc-box">
+          <div class="inspector-label">배속 유닛 현황</div>
+          <div class="squad-unit-card">
+            <div class="unit-avatar-box">👤</div>
+            <div class="unit-desc-box">
+              <div class="unit-name">정의실현부 모브 학생</div>
+              <div class="unit-weapon">무기: JTF 제식 저격소총</div>
+              <div class="unit-status">컨디션: 정상 (HP 100%)</div>
+            </div>
+          </div>
+
+          <div class="inspector-label" style="margin-top: 18px;">전술 작전 지침</div>
+          <div class="tactical-guide-box">
+            <p>1. 지도 상의 <strong style="color:#ef4444;">🔴 활성 거점</strong>을 클릭하여 작전을 진행합니다.</p>
+            <p>2. 업무를 수락하면 <strong style="color:#eab308;">4코스 목표</strong>가 생성됩니다.</p>
+            <p>3. 거절 시 <strong style="color:#38bdf8;">3갈래 자유 탐색로</strong>가 개척됩니다.</p>
+          </div>
+        </div>
+
+        <div class="inspector-action-area">
+          <button class="btn-region-deploy active" id="btn-reopen-quest" style="background:linear-gradient(135deg, #ef4444, #dc2626); border-color:#f87171;">
+            <span>📋 현재 업무 브리핑 확인</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    const reopenBtn = document.getElementById('btn-reopen-quest');
+    if (reopenBtn && this.questSystem) {
+      reopenBtn.addEventListener('click', () => {
+        this.questSystem.handleNodeClick(this.questSystem.nodes[0]);
+      });
+    }
   }
 }
 

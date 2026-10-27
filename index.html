@@ -179,10 +179,39 @@
     </main>
   </div>
 
+  <!-- 업무(퀘스트) 선택 알림 팝업 모달 (SCHALE TERMINAL) -->
+  <div id="quest-modal" class="quest-modal-overlay hidden">
+    <div class="quest-modal-card">
+      <div class="quest-modal-header">
+        <div class="terminal-badge">SCHALE DISPATCH TERMINAL</div>
+        <div class="quest-number" id="quest-modal-num">업무 #01 [외부 소탕 의뢰]</div>
+      </div>
+      <div class="quest-modal-body">
+        <h2 class="quest-title" id="quest-modal-title">정의실현부 불량배 소탕 요청</h2>
+        <div class="quest-divider"></div>
+        <p class="quest-desc" id="quest-modal-desc">
+          정의실현부에 외부에서 불량배 소탕 요청이 들어왔다. 최근 자치구 외곽에서 학생들을 위협하는 무장 불량배들의 은신처를 수색하여 진압하십시오.
+        </p>
+        <div class="quest-route-preview">
+          <div class="route-item accept-route">✨ <strong>[수락 시]</strong>: 총 4코스 직렬 경로 개척 (정찰 ➔ 수색 ➔ 은신처 ➔ 💀보스전)</div>
+          <div class="route-item decline-route">🧭 <strong>[거절 시]</strong>: 의뢰 없이 주변 3갈래 자유 탐색로 개척</div>
+        </div>
+      </div>
+      <div class="quest-modal-actions">
+        <button id="btn-quest-accept" class="btn-quest-btn accept">
+          <span>✔ 수락 (업무 1 추가 & 4코스 개척)</span>
+        </button>
+        <button id="btn-quest-decline" class="btn-quest-btn decline">
+          <span>✖ 거절 (자유 탐색 3갈래길)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="js/three.min.js"></script>
   <script src="js/mob_3d.js?v=3.1.0"></script>
   <script src="js/mob_3d_viewer.js?v=3.1.0"></script>
-  <script src="js/mob_renderer.js?v=3.1.0"></script>
+  <script src="js/quest_system.js?v=3.1.0"></script>
   <script src="js/map_data.js?v=3.1.0"></script>
   <script src="js/map.js?v=3.1.0"></script>
   <script src="js/main.js?v=3.1.0"></script>

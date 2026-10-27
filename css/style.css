@@ -934,3 +934,239 @@ body, html {
   border-radius: 4px;
   border: 1px solid rgba(148, 163, 184, 0.2);
 }
+
+/* ==========================================
+   4. 업무(퀘스트) 팝업 모달 & 자치구 HUD
+   ========================================== */
+.quest-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(2, 6, 23, 0.78);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.quest-modal-card {
+  width: 520px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 2px solid #ef4444;
+  border-radius: 14px;
+  padding: 24px 28px;
+  box-shadow: 0 0 35px rgba(239, 68, 68, 0.35), inset 0 0 20px rgba(0, 0, 0, 0.6);
+  animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.92) translateY(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.quest-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.3);
+  padding-bottom: 12px;
+}
+
+.terminal-badge {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #00f0ff;
+}
+
+.quest-number {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  padding: 3px 9px;
+  border-radius: 4px;
+}
+
+.quest-modal-body {
+  margin-top: 16px;
+}
+
+.quest-title {
+  font-size: 21px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+}
+
+.quest-divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 14px 0;
+}
+
+.quest-desc {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #cbd5e1;
+}
+
+.quest-route-preview {
+  margin-top: 18px;
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-left: 3px solid #ef4444;
+}
+
+.route-item {
+  font-size: 12.5px;
+  color: #94a3b8;
+}
+
+.route-item.accept-route strong {
+  color: #ef4444;
+}
+
+.route-item.decline-route strong {
+  color: #38bdf8;
+}
+
+.quest-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn-quest-btn {
+  flex: 1;
+  padding: 13px;
+  border-radius: 8px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid;
+}
+
+.btn-quest-btn.accept {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border-color: #f87171;
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
+}
+
+.btn-quest-btn.accept:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.15);
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.7);
+}
+
+.btn-quest-btn.decline {
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(148, 163, 184, 0.4);
+  color: #cbd5e1;
+}
+
+.btn-quest-btn.decline:hover {
+  background: rgba(51, 65, 85, 0.8);
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+/* 상단 작전 HUD */
+.active-quest-hud {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid #ef4444;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.3);
+  pointer-events: none;
+  animation: fadeIn 0.3s ease;
+}
+
+/* 인스펙터 내 소속 카드 */
+.inspector-squad-box {
+  background: rgba(30, 41, 59, 0.35);
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 12px;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.squad-info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.squad-emblem {
+  font-size: 22px;
+}
+
+.squad-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.squad-unit {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+/* 자치구 작전 가이드 */
+.squad-unit-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 8px;
+  padding: 10px 12px;
+  border-left: 3px solid #ef4444;
+}
+
+.unit-avatar-box {
+  font-size: 26px;
+}
+
+.unit-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.unit-weapon, .unit-status {
+  font-size: 11.5px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.tactical-guide-box {
+  background: rgba(10, 15, 26, 0.6);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
