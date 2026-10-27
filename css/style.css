@@ -177,8 +177,39 @@ body, html {
 
 /* 시작하기 버튼 래퍼 */
 .start-btn-wrapper {
-  margin-top: 52px;
+  margin-top: 40px;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+/* 블루아카이브 서브 버튼 (모브 뷰어 버튼) */
+.btn-ba-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 24px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  border-radius: 8px;
+  color: #f87171;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.2);
+}
+
+.btn-ba-secondary:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
 }
 
 /* 블루아카이브 스타일 시작 버튼 */
@@ -646,4 +677,188 @@ body, html {
 @keyframes pulse-text {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 0.85; }
+}
+
+/* ==========================================
+   3. 정실부 모브 캐릭터 뷰어 (MOB SHOWCASE)
+   ========================================== */
+#mob-screen {
+  padding: 16px 24px;
+  background: radial-gradient(circle at center, rgba(30, 41, 59, 0.7) 0%, rgba(6, 11, 20, 0.98) 100%);
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.mob-showcase-container {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+}
+
+/* 상단 2D vs 2.5D 비교 카드 행 */
+.mob-comparison-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.mob-card {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.mob-card.highlight {
+  border-color: rgba(239, 68, 68, 0.6);
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.25);
+}
+
+.mob-card-badge {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #94a3b8;
+}
+
+.ba-pulse {
+  color: #ef4444;
+  border-color: #ef4444;
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+.mob-canvas-box {
+  width: 260px;
+  height: 260px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.2) 70%);
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+.mob-card-info {
+  width: 100%;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.mob-card-title {
+  font-size: 17px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.mob-card-desc {
+  font-size: 12.5px;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+.mob-tags {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.mob-tags span {
+  font-size: 11px;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+/* 하단 인터랙티브 조작 필드 */
+.mob-playground-card {
+  flex: 1;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  min-height: 240px;
+}
+
+.playground-header {
+  margin-bottom: 10px;
+}
+
+.playground-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.playground-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.playground-ctrl-hint {
+  font-size: 12px;
+  color: #facc15;
+  background: rgba(250, 204, 21, 0.1);
+  border: 1px solid rgba(250, 204, 21, 0.3);
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+
+.playground-canvas-box {
+  flex: 1;
+  position: relative;
+  background: rgba(10, 15, 26, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 180px;
+}
+
+#canvas-mob-playground {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.playground-hud {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  display: flex;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.hud-stat {
+  font-family: 'Montserrat', 'Noto Sans KR', sans-serif;
+  font-size: 11.5px;
+  color: #94a3b8;
+  background: rgba(15, 23, 42, 0.85);
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
 }
