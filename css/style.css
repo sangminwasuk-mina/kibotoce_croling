@@ -1202,12 +1202,15 @@ body, html {
 }
 
 .club-card-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 18px;
 }
 
 .club-card {
+  width: 320px;
+  max-width: 100%;
   background: rgba(15, 23, 42, 0.85);
   border: 1.5px solid rgba(71, 85, 105, 0.4);
   border-radius: 12px;

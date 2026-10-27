@@ -321,27 +321,36 @@ const JTFMob3D = (function() {
       targetRotationY: 0
     };
 
-    // 업데이트 함수
-    root.update = function(delta, isMoving = false) {
+    // 업데이트 함수 (걷기, 달리기, 점프 완벽 지원)
+    root.update = function(delta, isMoving = false, isRunning = false, isJumping = false) {
       this.userData.animTime += delta;
       const t = this.userData.animTime;
 
       // 1. 헤일로 공중 부유 (위아래 살랑살랑)
-      const haloBob = Math.sin(t * 3.0) * 0.06;
+      const haloBob = isJumping ? Math.sin(t * 6.0) * 0.08 : Math.sin(t * 3.0) * 0.06;
       this.userData.haloGroup.position.y = this.userData.baseHaloY + haloBob;
       this.userData.haloGroup.rotation.z = Math.sin(t * 1.5) * 0.05;
 
-      // 2. 보행 바운스 애니메이션 (베레모는 bodyMesh의 자식이므로 자동 연동)
-      if (isMoving) {
-        const walkBob = Math.abs(Math.sin(t * 12.0)) * 0.12;
+      // 2. 모션 애니메이션 (점프 vs 달리기 vs 걷기 vs 대기)
+      if (isJumping) {
+        // 점프 중: 공중에 뜬 상태 유지 및 이동 중이면 약간 앞으로 기울임
+        this.userData.bodyMesh.position.y = 0.675;
+        this.userData.bodyMesh.rotation.x = isMoving ? 0.12 : 0;
+      } else if (isMoving) {
+        // 달리기 vs 걷기 속도 및 바운스 차이
+        const freq = isRunning ? 18.0 : 12.0;
+        const amp = isRunning ? 0.16 : 0.11;
+        const lean = isRunning ? 0.18 : 0.09;
+
+        const walkBob = Math.abs(Math.sin(t * freq)) * amp;
         this.userData.bodyMesh.position.y = 0.675 + walkBob;
-        // 이동 시 몸체를 살짝 앞으로 기울임
-        this.userData.bodyMesh.rotation.x = 0.09;
-        // 그림자 크기 축소 (공중에 뜰 때)
-        const scale = 1.0 - (walkBob * 0.7);
+        this.userData.bodyMesh.rotation.x = lean;
+
+        // 지면 이동 시 그림자 미세 반응
+        const scale = 1.0 - (walkBob * 0.5);
         this.userData.shadowMesh.scale.set(scale, scale, 1.0);
       } else {
-        // 숨쉬기
+        // 대기 (숨쉬기)
         const breath = Math.sin(t * 2.5) * 0.02;
         this.userData.bodyMesh.position.y = 0.675 + breath;
         this.userData.bodyMesh.rotation.x = 0;
@@ -354,7 +363,8 @@ const JTFMob3D = (function() {
       root.rotation.y += diff * 0.25; // 기민하고 매끄러운 방향 전환
 
       // 4. 턴할 때 자연스러운 코너링 뱅킹(좌우 기울기)
-      const rollTarget = isMoving ? Math.max(-0.15, Math.min(0.15, -diff * 0.35)) : 0;
+      const rollFactor = isRunning ? 0.45 : 0.35;
+      const rollTarget = isMoving ? Math.max(-0.2, Math.min(0.2, -diff * rollFactor)) : 0;
       root.rotation.z += (rollTarget - root.rotation.z) * 0.2;
     };
 

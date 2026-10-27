@@ -69,9 +69,17 @@ class JTFFieldExplorer {
 
     this.playerState = {
       x: 0,
+      y: 0,
       z: 1.5,
-      speed: 4.8,
+      walkSpeed: 4.5,
+      runSpeed: 8.5,
+      velocityY: 0,
+      gravity: -22.0,
+      jumpForce: 6.8,
+      isGrounded: true,
       isMoving: false,
+      isRunning: false,
+      isJumping: false,
       targetRotationY: 0
     };
   }
@@ -195,7 +203,16 @@ class JTFFieldExplorer {
     window.addEventListener('keydown', (e) => {
       const k = e.key.toLowerCase();
       this.keys[k] = true;
-      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(k)) {
+      if (e.code) this.keys[e.code.toLowerCase()] = true;
+
+      // 점프 트리거: [Space] 키로 지면에 있을 때 점프 발동
+      if ((k === ' ' || e.code === 'Space') && this.playerState && this.playerState.isGrounded) {
+        this.playerState.velocityY = this.playerState.jumpForce;
+        this.playerState.isGrounded = false;
+        this.playerState.isJumping = true;
+      }
+
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd', ' ', 'shift'].includes(k) || e.code === 'Space') {
         const fieldScreen = document.getElementById('field-screen');
         if (fieldScreen && !fieldScreen.classList.contains('hidden')) {
           e.preventDefault();
@@ -204,7 +221,9 @@ class JTFFieldExplorer {
     });
 
     window.addEventListener('keyup', (e) => {
-      this.keys[e.key.toLowerCase()] = false;
+      const k = e.key.toLowerCase();
+      this.keys[k] = false;
+      if (e.code) this.keys[e.code.toLowerCase()] = false;
     });
 
     window.addEventListener('resize', () => this.resize());
@@ -223,11 +242,17 @@ class JTFFieldExplorer {
     this.isRunning = true;
     this.resize();
 
-    // 시작 위치 리셋
+    // 시작 위치 및 물리 상태 리셋
     if (this.playerMob) {
       this.playerMob.position.set(0, 0, 1.5);
       this.playerState.x = 0;
+      this.playerState.y = 0;
       this.playerState.z = 1.5;
+      this.playerState.velocityY = 0;
+      this.playerState.isGrounded = true;
+      this.playerState.isJumping = false;
+      this.playerState.isRunning = false;
+      this.playerState.isMoving = false;
     }
 
     let lastTime = performance.now();
@@ -258,6 +283,11 @@ class JTFFieldExplorer {
   update(delta) {
     if (!this.playerMob) return;
 
+    // 1. 달리기 판정 ([Shift] 키 입력)
+    const isRunning = !!(this.keys['shift'] || this.keys['shiftleft'] || this.keys['shiftright']);
+    this.playerState.isRunning = isRunning;
+
+    // 2. 수평 이동 방향 판정 ([W, A, S, D] / [방향키])
     let dx = 0;
     let dz = 0;
 
@@ -267,9 +297,12 @@ class JTFFieldExplorer {
     if (this.keys['d'] || this.keys['arrowright']) dx += 1;
 
     const isMoving = (dx !== 0 || dz !== 0);
+    this.playerState.isMoving = isMoving;
+
+    const currentSpeed = isRunning ? this.playerState.runSpeed : this.playerState.walkSpeed;
 
     if (isMoving) {
-      const speed = this.playerState.speed * delta;
+      const speed = currentSpeed * delta;
       const len = Math.sqrt(dx * dx + dz * dz);
       dx = (dx / len) * speed;
       dz = (dz / len) * speed;
@@ -277,7 +310,7 @@ class JTFFieldExplorer {
       this.playerState.x += dx;
       this.playerState.z += dz;
 
-      // 실내 벽 및 회의용 책상 충돌 제한
+      // 실내 외곽 벽 및 회의용 책상 충돌 제한
       const boundX = 12.5;
       const boundZMin = -9.5;
       const boundZMax = 9.5;
@@ -292,25 +325,52 @@ class JTFFieldExplorer {
       this.playerState.x = Math.max(-boundX, Math.min(boundX, this.playerState.x));
       this.playerState.z = Math.max(boundZMin, Math.min(boundZMax, this.playerState.z));
 
-      this.playerMob.position.x = this.playerState.x;
-      this.playerMob.position.z = this.playerState.z;
-
       // 이동 방향 회전
       this.playerMob.userData.targetRotationY = Math.atan2(dx, dz);
-
-      // 카메라가 캐릭터를 부드럽게 추적
-      const camTargetX = this.playerState.x * 0.45;
-      const camTargetZ = this.playerState.z * 0.45 + 11.5;
-      this.camera.position.x += (camTargetX - this.camera.position.x) * 0.08;
-      this.camera.position.z += (camTargetZ - this.camera.position.z) * 0.08;
     }
 
-    this.playerMob.update(delta, isMoving);
+    // 3. 점프 & 중력 물리 계산 ([Space] 점프)
+    if (!this.playerState.isGrounded) {
+      this.playerState.velocityY += this.playerState.gravity * delta;
+      this.playerState.y += this.playerState.velocityY * delta;
 
-    // 하단 HUD 갱신
+      if (this.playerState.y <= 0) {
+        this.playerState.y = 0;
+        this.playerState.velocityY = 0;
+        this.playerState.isGrounded = true;
+        this.playerState.isJumping = false;
+      }
+    }
+
+    // 4. 모브 캐릭터 3D 위치 반영 (X, Y, Z)
+    this.playerMob.position.set(this.playerState.x, this.playerState.y, this.playerState.z);
+
+    // 5. 점프 중 그림자 지면 유지 및 축소 보정
+    if (this.playerMob.userData && this.playerMob.userData.shadowMesh) {
+      this.playerMob.userData.shadowMesh.position.y = 0.01 - this.playerState.y;
+      const jumpShadowScale = Math.max(0.35, 1.0 - this.playerState.y * 0.35);
+      this.playerMob.userData.shadowMesh.scale.set(jumpShadowScale, jumpShadowScale, 1.0);
+    }
+
+    // 6. 카메라가 캐릭터를 부드럽게 추적 (쿼터뷰 시점)
+    const camTargetX = this.playerState.x * 0.45;
+    const camTargetZ = this.playerState.z * 0.45 + 11.5;
+    this.camera.position.x += (camTargetX - this.camera.position.x) * 0.08;
+    this.camera.position.z += (camTargetZ - this.camera.position.z) * 0.08;
+
+    // 7. 3D 애니메이션 갱신 (이동, 달리기, 점프 전달)
+    this.playerMob.update(delta, isMoving, isRunning, this.playerState.isJumping);
+
+    // 8. 하단 HUD 상태 갱신
     const posHud = document.getElementById('field-pos-hud');
     if (posHud) {
-      posHud.innerText = `현재 위치: X: ${this.playerState.x.toFixed(1)}, Z: ${this.playerState.z.toFixed(1)}`;
+      let stateLabel = '대기 (IDLE)';
+      if (this.playerState.isJumping) {
+        stateLabel = '🦘 점프 중 (JUMP)';
+      } else if (isMoving) {
+        stateLabel = isRunning ? '⚡ 전력 질주 (SPRINT)' : '🚶 걷기 (WALK)';
+      }
+      posHud.innerText = `상태: ${stateLabel} | 위치: X: ${this.playerState.x.toFixed(1)}, Y: ${this.playerState.y.toFixed(1)}, Z: ${this.playerState.z.toFixed(1)}`;
     }
   }
 }
