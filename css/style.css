@@ -1170,3 +1170,324 @@ body, html {
   flex-direction: column;
   gap: 4px;
 }
+
+/* ==========================================
+   5. 2단계: 소속 동아리 선택 화면 (PHASE 2: CLUB SELECT)
+   ========================================== */
+.club-select-container {
+  flex: 1;
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px 0;
+}
+
+.club-select-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.club-section-title {
+  font-size: 24px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.club-section-desc {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-top: 6px;
+}
+
+.club-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.club-card {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1.5px solid rgba(71, 85, 105, 0.4);
+  border-radius: 12px;
+  padding: 22px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  transition: all 0.25s ease;
+}
+
+.club-card.active-club {
+  border-color: #ef4444;
+  background: rgba(30, 41, 59, 0.85);
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.35);
+  transform: translateY(-4px);
+}
+
+.club-badge-active {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.club-badge-locked {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.club-card.locked-club {
+  opacity: 0.55;
+  filter: grayscale(0.5);
+}
+
+.club-emblem-box {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(30, 41, 59, 0.6);
+  border: 2px solid rgba(239, 68, 68, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 32px;
+  margin-top: 10px;
+  margin-bottom: 14px;
+}
+
+.club-card.locked-club .club-emblem-box {
+  border-color: rgba(71, 85, 105, 0.4);
+}
+
+.club-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.club-en {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #ef4444;
+  margin-top: 2px;
+}
+
+.club-desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #94a3b8;
+  margin-top: 10px;
+  flex: 1;
+}
+
+.club-unit-brief {
+  margin-top: 14px;
+  background: rgba(15, 23, 42, 0.8);
+  border-radius: 6px;
+  padding: 8px 12px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-left: 3px solid #ef4444;
+}
+
+.unit-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+.unit-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.club-card-check {
+  margin-top: 14px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #facc15;
+}
+
+.club-deploy-action {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+.btn-club-deploy {
+  width: 380px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border-color: #f87171;
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+}
+
+.btn-club-deploy:hover {
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
+  box-shadow: 0 0 40px rgba(239, 68, 68, 0.8);
+}
+
+/* ==========================================
+   6. 3단계: 자치구 대형 풀스크린 지도 (PHASE 3)
+   ========================================== */
+.full-screen-overlay {
+  padding: 0 !important;
+  background: #060b14;
+}
+
+.district-top-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 62px;
+  background: linear-gradient(180deg, rgba(6, 11, 20, 0.95) 0%, rgba(6, 11, 20, 0.6) 80%, transparent 100%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.district-hud-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn-hud-back {
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+.district-hud-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.hud-sub {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #38bdf8;
+}
+
+.hud-main {
+  font-size: 16px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.district-hud-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.hud-quest-banner {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid #ef4444;
+  border-radius: 6px;
+  padding: 6px 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.3);
+}
+
+.hud-squad-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  padding: 5px 12px;
+  border-radius: 4px;
+}
+
+/* 대형 캔버스 래퍼 */
+.district-canvas-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: grab;
+}
+
+#district-map-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 조작 힌트 */
+.district-canvas-hint {
+  position: absolute;
+  bottom: 16px;
+  left: 20px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #cbd5e1;
+  pointer-events: none;
+}
+
+.district-node-legend {
+  position: absolute;
+  bottom: 16px;
+  right: 20px;
+  display: flex;
+  gap: 14px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.node-leg-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #e2e8f0;
+}
+
+.leg-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.leg-dot.red { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+.leg-dot.yellow { background: #eab308; box-shadow: 0 0 6px #eab308; }
+.leg-dot.green { background: #22c55e; box-shadow: 0 0 6px #22c55e; }

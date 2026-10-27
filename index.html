@@ -98,6 +98,139 @@
     </main>
   </div>
 
+  <!-- 2단계: 소속 / 동아리 선택 전용 화면 (PHASE 2: CLUB SELECT) -->
+  <div id="club-screen" class="screen-overlay hidden">
+    <header class="top-nav">
+      <div class="map-nav-left">
+        <button id="btn-back-to-map" class="btn-ba-back">
+          <span class="btn-back-icon">◀</span>
+          <span>학원 선택으로</span>
+        </button>
+        <div class="map-nav-title">
+          <span class="map-title-sub">PHASE 2: CLUB & SQUAD SELECTION</span>
+          <span class="map-title-main">트리니티 종합학원 // 소속 동아리 선택</span>
+        </div>
+      </div>
+      <div class="map-nav-right">
+        <span class="map-badge-phase" style="color: #38bdf8; border-color: #38bdf8; background: rgba(56, 189, 248, 0.1);">TRINITY GENERAL SECTOR</span>
+      </div>
+    </header>
+
+    <main class="club-select-container">
+      <div class="club-select-header">
+        <h2 class="club-section-title">출격할 소속 동아리를 선택하십시오</h2>
+        <p class="club-section-desc">선택한 동아리의 신입 모브 학생 1인으로 여정을 시작합니다.</p>
+      </div>
+
+      <!-- 동아리 카드 목록 -->
+      <div class="club-card-grid">
+        <!-- 정의실현부 (선택 가능) -->
+        <div class="club-card active-club" id="club-card-jtf">
+          <div class="club-badge-active">출격 준비 완료</div>
+          <div class="club-emblem-box">⚖️</div>
+          <div class="club-info">
+            <h3 class="club-title">정의실현부</h3>
+            <span class="club-en">JUSTICE TASK FORCE</span>
+            <p class="club-desc">트리니티 교정의 치안 유지와 분쟁 무력 진압을 전담하는 학원 최고의 무력 집행 기관입니다.</p>
+            <div class="club-unit-brief">
+              <span class="unit-tag">시작 유닛</span>
+              <span class="unit-name">정의실현부 모브 학생 (3D 큐브)</span>
+            </div>
+          </div>
+          <div class="club-card-check">✔ 선택됨</div>
+        </div>
+
+        <!-- 티파티 (잠김) -->
+        <div class="club-card locked-club">
+          <div class="club-badge-locked">🔒 미개방</div>
+          <div class="club-emblem-box">☕</div>
+          <div class="club-info">
+            <h3 class="club-title">티파티 (Tea Party)</h3>
+            <span class="club-en">STUDENT COUNCIL</span>
+            <p class="club-desc">트리니티 종합학원의 학생회이자 3대 분파의 수장들이 모이는 최고 통치 기구입니다.</p>
+          </div>
+        </div>
+
+        <!-- 구호기사단 (잠김) -->
+        <div class="club-card locked-club">
+          <div class="club-badge-locked">🔒 미개방</div>
+          <div class="club-emblem-box">🩺</div>
+          <div class="club-info">
+            <h3 class="club-title">구호기사단</h3>
+            <span class="club-en">REMEDIAL KNIGHTS</span>
+            <p class="club-desc">부상자와 환자를 치료하며 박애주의를 실천하는 트리니티의 거대 의료 자치 기구입니다.</p>
+          </div>
+        </div>
+
+        <!-- 보충수업부 (잠김) -->
+        <div class="club-card locked-club">
+          <div class="club-badge-locked">🔒 미개방</div>
+          <div class="club-emblem-box">📖</div>
+          <div class="club-info">
+            <h3 class="club-title">보충수업부</h3>
+            <span class="club-en">MAKE-UP WORK CLUB</span>
+            <p class="club-desc">퇴학 위기에 처한 문제아들이 모여 특별 시험을 치르기 위해 결성된 임시 동아리입니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 하단 출격 버튼 -->
+      <div class="club-deploy-action">
+        <button id="btn-deploy-to-district" class="btn-ba-start btn-club-deploy">
+          <span class="btn-bg-glimmer"></span>
+          <span class="btn-icon">🚀</span>
+          <span class="btn-label">[정의실현부] 작전 출격 (자치구 진입)</span>
+          <span class="btn-arrow">➔</span>
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- 3단계: 자치구 대형 필드 노드 지도 화면 (PHASE 3: FULL-SCREEN DISTRICT MAP) -->
+  <div id="district-screen" class="screen-overlay full-screen-overlay hidden">
+    <!-- 상단 미니멀 HUD 바 -->
+    <header class="district-top-hud">
+      <div class="district-hud-left">
+        <button id="btn-back-to-clubs" class="btn-ba-back btn-hud-back">
+          <span class="btn-back-icon">◀</span>
+          <span>소속 선택</span>
+        </button>
+        <div class="district-hud-title">
+          <span class="hud-sub">TRINITY AUTONOMOUS SECTOR</span>
+          <span class="hud-main">트리니티 자치구 대형 작전 전개도</span>
+        </div>
+      </div>
+      <div class="district-hud-center">
+        <div id="district-quest-hud" class="hud-quest-banner">
+          <span class="hud-quest-icon">📋</span>
+          <span id="district-quest-text">작전 현황: [정의실현부 본부] 거점을 확인하십시오.</span>
+        </div>
+      </div>
+      <div class="district-hud-right">
+        <div class="hud-squad-badge">
+          <span>소속: 정의실현부 모브</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 대형 캔버스 뷰포트 (우측 패널 없이 화면 100% 사용) -->
+    <div class="district-canvas-wrapper" id="district-canvas-container">
+      <canvas id="district-map-canvas"></canvas>
+
+      <!-- 조작 힌트 오버레이 -->
+      <div class="district-canvas-hint">
+        <span>🖱️ <strong>마우스 좌클릭 드래그</strong>로 대형 지도를 자유롭게 이동하고, <strong>마우스 휠</strong>로 확대/축소할 수 있습니다.</span>
+      </div>
+
+      <!-- 노드 범례 -->
+      <div class="district-node-legend">
+        <span class="node-leg-item"><span class="leg-dot red"></span>🔴 진행 가능</span>
+        <span class="node-leg-item"><span class="leg-dot yellow"></span>🟡 대기/연속</span>
+        <span class="node-leg-item"><span class="leg-dot green"></span>🟢 작전 완료</span>
+      </div>
+    </div>
+  </div>
+
   <!-- 정실부 모브 3D WebGL 뷰어 화면 -->
   <div id="mob-screen" class="screen-overlay hidden">
     <header class="top-nav">
@@ -209,11 +342,11 @@
   </div>
 
   <script src="js/three.min.js"></script>
-  <script src="js/mob_3d.js?v=3.1.0"></script>
-  <script src="js/mob_3d_viewer.js?v=3.1.0"></script>
-  <script src="js/quest_system.js?v=3.1.0"></script>
-  <script src="js/map_data.js?v=3.1.0"></script>
-  <script src="js/map.js?v=3.1.0"></script>
-  <script src="js/main.js?v=3.1.0"></script>
+  <script src="js/mob_3d.js?v=3.2.0"></script>
+  <script src="js/mob_3d_viewer.js?v=3.2.0"></script>
+  <script src="js/district_crawler.js?v=3.2.0"></script>
+  <script src="js/map_data.js?v=3.2.0"></script>
+  <script src="js/map.js?v=3.2.0"></script>
+  <script src="js/main.js?v=3.2.0"></script>
 </body>
 </html>

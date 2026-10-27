@@ -103,7 +103,55 @@ function initBackgroundCanvas() {
 
 // 2. 화면 전환 및 메인 UI 인터랙션
 let mapRendererInstance = null;
+let districtCrawlerInstance = null;
 let mobShowcaseInitialized = false;
+
+// 전역 화면 흐름 컨트롤러
+window.AppController = {
+  // 1단계(학원 선택) -> 2단계(소속 동아리 선택)
+  goToClubSelect(region) {
+    console.log('[FLOW] 1단계 -> 2단계: 소속 동아리 선택 진입:', region.name);
+    const mapScreen = document.getElementById('map-screen');
+    const clubScreen = document.getElementById('club-screen');
+    if (mapScreen) mapScreen.classList.add('hidden');
+    if (clubScreen) clubScreen.classList.remove('hidden');
+  },
+
+  // 2단계(소속 선택) -> 1단계(학원 선택 복귀)
+  backToMap() {
+    console.log('[FLOW] 2단계 -> 1단계: 학원 선택으로 복귀');
+    const clubScreen = document.getElementById('club-screen');
+    const mapScreen = document.getElementById('map-screen');
+    if (clubScreen) clubScreen.classList.add('hidden');
+    if (mapScreen) mapScreen.classList.remove('hidden');
+  },
+
+  // 2단계(소속 선택) -> 3단계(자치구 풀스크린 대형 노드 맵 진입!)
+  goToDistrictMap() {
+    console.log('[FLOW] 2단계 -> 3단계: 자치구 대형 노드 지도 진입!');
+    const clubScreen = document.getElementById('club-screen');
+    const districtScreen = document.getElementById('district-screen');
+    if (clubScreen) clubScreen.classList.add('hidden');
+    if (districtScreen) {
+      districtScreen.classList.remove('hidden');
+      if (!districtCrawlerInstance) {
+        districtCrawlerInstance = new TrinityDistrictCrawler('district-map-canvas');
+      } else {
+        districtCrawlerInstance.resize();
+        districtCrawlerInstance.centerOnNode(districtCrawlerInstance.currentNodeId);
+      }
+    }
+  },
+
+  // 3단계(자치구 맵) -> 2단계(소속 선택 복귀)
+  backToClubs() {
+    console.log('[FLOW] 3단계 -> 2단계: 소속 선택으로 복귀');
+    const districtScreen = document.getElementById('district-screen');
+    const clubScreen = document.getElementById('club-screen');
+    if (districtScreen) districtScreen.classList.add('hidden');
+    if (clubScreen) clubScreen.classList.remove('hidden');
+  }
+};
 
 function initMainUI() {
   const mainScreen = document.getElementById('main-screen');
@@ -113,6 +161,10 @@ function initMainUI() {
   const btnBack = document.getElementById('btn-back-to-title');
   const btnOpenMobViewer = document.getElementById('btn-open-mob-viewer');
   const btnBackFromMob = document.getElementById('btn-back-from-mob');
+
+  const btnBackToMap = document.getElementById('btn-back-to-map');
+  const btnDeployToDistrict = document.getElementById('btn-deploy-to-district');
+  const btnBackToClubs = document.getElementById('btn-back-to-clubs');
 
   // 시작하기 버튼 -> 키보토스 지도 화면
   if (btnStart) {
@@ -142,6 +194,27 @@ function initMainUI() {
       console.log('[MULTIVERSE ARCHIVE] 메인 타이틀 화면으로 복귀');
       if (mapScreen) mapScreen.classList.add('hidden');
       if (mainScreen) mainScreen.classList.remove('hidden');
+    });
+  }
+
+  // 2단계 뒤로가기 -> 1단계
+  if (btnBackToMap) {
+    btnBackToMap.addEventListener('click', () => {
+      window.AppController.backToMap();
+    });
+  }
+
+  // 2단계 출격 버튼 -> 3단계 풀스크린 대형 지도
+  if (btnDeployToDistrict) {
+    btnDeployToDistrict.addEventListener('click', () => {
+      window.AppController.goToDistrictMap();
+    });
+  }
+
+  // 3단계 뒤로가기 -> 2단계
+  if (btnBackToClubs) {
+    btnBackToClubs.addEventListener('click', () => {
+      window.AppController.backToClubs();
     });
   }
 

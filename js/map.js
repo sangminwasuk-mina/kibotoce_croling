@@ -56,15 +56,6 @@ class KivotosMapRenderer {
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
 
-      // 줌인 상태일 때 노드 호버 우선 검사
-      if (this.questSystem && this.questSystem.isZoomed) {
-        const hoverNode = this.questSystem.findNodeAt(mouseX, mouseY, this);
-        if (hoverNode) {
-          this.canvas.style.cursor = 'pointer';
-          return;
-        }
-      }
-
       let found = null;
       for (const region of this.data.regions) {
         if (this.isPointInRegion(mouseX, mouseY, region)) {
@@ -76,42 +67,27 @@ class KivotosMapRenderer {
       if (this.hoveredRegion !== found) {
         this.hoveredRegion = found;
         this.canvas.style.cursor = found ? 'pointer' : 'default';
-        if (!this.questSystem || !this.questSystem.isZoomed) {
-          this.updateInspectorPanel(found);
-        }
+        // 선택된 구역이 이미 있다면 마우스를 다른 데 치워도 선택 정보가 풀리지 않고 유지됨!
+        this.updateInspectorPanel(this.selectedRegion || found);
       }
     });
 
     this.canvas.addEventListener('mouseleave', () => {
       this.hoveredRegion = null;
       this.canvas.style.cursor = 'default';
-      if (!this.questSystem || !this.questSystem.isZoomed) {
-        this.updateInspectorPanel(this.selectedRegion);
-      }
+      this.updateInspectorPanel(this.selectedRegion);
     });
 
-    // 클릭 이벤트
-    this.canvas.addEventListener('click', (e) => {
-      const rect = this.canvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-
-      // 1. 줌인 상태에서 노드 클릭 처리
-      if (this.questSystem && this.questSystem.isZoomed) {
-        const clickedNode = this.questSystem.findNodeAt(mouseX, mouseY, this);
-        if (clickedNode) {
-          this.questSystem.handleNodeClick(clickedNode);
-          return;
-        }
-      }
-
+    // 클릭 이벤트 (지역 영구 선택 고정)
+    this.canvas.addEventListener('click', () => {
       if (!this.hoveredRegion) return;
 
       if (this.hoveredRegion.isLocked) {
         this.triggerLockedFeedback(this.hoveredRegion);
       } else {
+        // 클릭한 구역을 선택 상태로 영구 고정!
         this.selectedRegion = this.hoveredRegion;
-        this.updateInspectorPanel(this.hoveredRegion);
+        this.updateInspectorPanel(this.selectedRegion);
       }
     });
   }
@@ -484,8 +460,8 @@ class KivotosMapRenderer {
             ? `<button class="btn-region-deploy locked" disabled>
                 <span>🔒 진입 불가 (잠김)</span>
                </button>`
-            : `<button class="btn-region-deploy active" id="btn-select-academy" style="background:linear-gradient(135deg, #0284c7, #0369a1); border-color:#38bdf8;">
-                <span>🚀 [정의실현부] 작전 개시 (진입 ▶)</span>
+            : `<button class="btn-region-deploy active" id="btn-next-to-club" style="background:linear-gradient(135deg, #0284c7, #0369a1); border-color:#38bdf8;">
+                <span>다음으로 (소속 선택) ▶</span>
                </button>`
           }
         </div>
@@ -493,10 +469,12 @@ class KivotosMapRenderer {
     `;
 
     if (!isLocked) {
-      const deployBtn = document.getElementById('btn-select-academy');
-      if (deployBtn) {
-        deployBtn.addEventListener('click', () => {
-          this.triggerSelectedFeedback(region);
+      const nextBtn = document.getElementById('btn-next-to-club');
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+          if (window.AppController && window.AppController.goToClubSelect) {
+            window.AppController.goToClubSelect(region);
+          }
         });
       }
     }
@@ -506,95 +484,6 @@ class KivotosMapRenderer {
     if (this.canvas) {
       this.canvas.classList.add('shake-canvas');
       setTimeout(() => this.canvas.classList.remove('shake-canvas'), 250);
-    }
-  }
-
-  triggerSelectedFeedback(region) {
-    if (region.id === 'trinity') {
-      this.startTrinityOperation();
-    } else {
-      alert(`🔒 [미개방 학원] 현재 작전에서는 트리니티 종합학원만 출격 가능합니다.`);
-    }
-  }
-
-  // 트리니티 자치구로 카메라 줌인 & 작전 시작
-  startTrinityOperation() {
-    console.log('[MAP] 트리니티 종합학원 정의실현부 작전 개시 -> 줌인 연출');
-
-    // 카메라를 트리니티 중심 좌표로 확대 전환
-    this.targetZoomFactor = 2.45;
-    this.targetCamFocusX = 378;
-    this.targetCamFocusY = 287;
-
-    if (this.questSystem) {
-      this.questSystem.enterDistrict('trinity');
-
-      // 우측 인스펙터를 실시간 현장 HUD로 전환
-      this.showDistrictHUD();
-
-      // 0.7초 후 첫 번째 업무 모달 팝업 자동 호출
-      setTimeout(() => {
-        this.questSystem.handleNodeClick(this.questSystem.nodes[0]);
-      }, 700);
-    }
-  }
-
-  // 자치구 내부 현장 작전 HUD
-  showDistrictHUD() {
-    if (!this.infoPanel) return;
-
-    this.infoPanel.innerHTML = `
-      <div class="inspector-card animate-fade">
-        <div class="inspector-header">
-          <div class="inspector-emblem" style="background:rgba(239, 68, 68, 0.15); border-color:#ef4444;">
-            ⚖️
-          </div>
-          <div class="inspector-title-area">
-            <div class="inspector-region-name" style="color:#ffffff;">정의실현부 작전 본부</div>
-            <div class="inspector-region-en">TRINITY J.T.F TACTICAL OPERATION</div>
-          </div>
-        </div>
-
-        <div class="inspector-status-row">
-          <span class="badge-unlocked" style="background:rgba(239, 68, 68, 0.15); border-color:#ef4444; color:#ef4444;">
-            🔴 작전 수행 중 (모브 단독 출격)
-          </span>
-        </div>
-
-        <div class="inspector-divider"></div>
-
-        <div class="inspector-desc-box">
-          <div class="inspector-label">배속 유닛 현황</div>
-          <div class="squad-unit-card">
-            <div class="unit-avatar-box">👤</div>
-            <div class="unit-desc-box">
-              <div class="unit-name">정의실현부 모브 학생</div>
-              <div class="unit-weapon">무기: JTF 제식 저격소총</div>
-              <div class="unit-status">컨디션: 정상 (HP 100%)</div>
-            </div>
-          </div>
-
-          <div class="inspector-label" style="margin-top: 18px;">전술 작전 지침</div>
-          <div class="tactical-guide-box">
-            <p>1. 지도 상의 <strong style="color:#ef4444;">🔴 활성 거점</strong>을 클릭하여 작전을 진행합니다.</p>
-            <p>2. 업무를 수락하면 <strong style="color:#eab308;">4코스 목표</strong>가 생성됩니다.</p>
-            <p>3. 거절 시 <strong style="color:#38bdf8;">3갈래 자유 탐색로</strong>가 개척됩니다.</p>
-          </div>
-        </div>
-
-        <div class="inspector-action-area">
-          <button class="btn-region-deploy active" id="btn-reopen-quest" style="background:linear-gradient(135deg, #ef4444, #dc2626); border-color:#f87171;">
-            <span>📋 현재 업무 브리핑 확인</span>
-          </button>
-        </div>
-      </div>
-    `;
-
-    const reopenBtn = document.getElementById('btn-reopen-quest');
-    if (reopenBtn && this.questSystem) {
-      reopenBtn.addEventListener('click', () => {
-        this.questSystem.handleNodeClick(this.questSystem.nodes[0]);
-      });
     }
   }
 }
