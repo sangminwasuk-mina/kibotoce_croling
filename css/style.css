@@ -744,6 +744,78 @@ body, html {
   animation: pulse-dot 2s infinite ease-in-out;
 }
 
+.mob-canvas-box-3d {
+  width: 100%;
+  height: 250px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle, rgba(30, 41, 59, 0.5) 0%, rgba(10, 15, 26, 0.3) 70%);
+  border-radius: 10px;
+  margin-top: 10px;
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.mob-canvas-box-3d:active {
+  cursor: grabbing;
+}
+
+.mob-canvas-box-3d canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+/* 3D 스펙 목록 */
+.mob-spec-list {
+  width: 100%;
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mob-spec-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(30, 41, 59, 0.4);
+  padding: 10px 14px;
+  border-radius: 8px;
+  border-left: 3px solid #ef4444;
+}
+
+.spec-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fca5a5;
+  white-space: nowrap;
+}
+
+.spec-val {
+  font-size: 12.5px;
+  color: #cbd5e1;
+  line-height: 1.45;
+}
+
+.playground-canvas-box-3d {
+  flex: 1;
+  position: relative;
+  background: radial-gradient(circle at center, rgba(15, 23, 42, 0.9) 0%, rgba(6, 11, 20, 0.95) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 220px;
+}
+
+.playground-canvas-box-3d canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
 .mob-canvas-box {
   width: 260px;
   height: 260px;

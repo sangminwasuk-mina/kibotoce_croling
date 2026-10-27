@@ -47,7 +47,7 @@
         </button>
         <button id="btn-open-mob-viewer" class="btn-ba-secondary">
           <span class="btn-sec-icon">👤</span>
-          <span class="btn-sec-label">정실부 모브 (2D vs 2.5D) 뷰어</span>
+          <span class="btn-sec-label">정실부 모브 (3D WebGL) 뷰어</span>
         </button>
       </div>
     </main>
@@ -98,7 +98,7 @@
     </main>
   </div>
 
-  <!-- 정실부 모브 2D vs 2.5D 테스트 뷰어 화면 -->
+  <!-- 정실부 모브 3D WebGL 뷰어 화면 -->
   <div id="mob-screen" class="screen-overlay hidden">
     <header class="top-nav">
       <div class="map-nav-left">
@@ -107,77 +107,84 @@
           <span>메인으로</span>
         </button>
         <div class="map-nav-title">
-          <span class="map-title-sub">CHARACTER PROTOTYPE // UNIT SHOWCASE</span>
-          <span class="map-title-main">트리니티 정의실현부 모브 학생 (2D vs 2.5D)</span>
+          <span class="map-title-sub">REAL 3D WebGL PROTOTYPE // TRINITY JUSTICE TASK FORCE</span>
+          <span class="map-title-main">트리니티 정의실현부 모브 학생 (진짜 3D 큐브 모델)</span>
         </div>
       </div>
       <div class="map-nav-right">
-        <span class="map-badge-phase" style="border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.1);">JTF MOB PROTOTYPE</span>
+        <span class="map-badge-phase" style="border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.1);">60 FPS ZERO-LAG CACHED</span>
       </div>
     </header>
 
     <main class="mob-showcase-container">
-      <!-- 상단: 2D vs 2.5D 정밀 비교 카드 -->
+      <!-- 상단: 3D 모델 정밀 360도 뷰어 + 정실부 디테일 브리핑 -->
       <div class="mob-comparison-row">
-        <!-- 2D 카드 -->
-        <div class="mob-card">
-          <div class="mob-card-badge">2D FLAT TOKEN</div>
-          <div class="mob-canvas-box">
-            <canvas id="canvas-mob-2d" width="260" height="260"></canvas>
+        <!-- 3D 인터랙티브 360도 회전 뷰 -->
+        <div class="mob-card highlight">
+          <div class="mob-card-badge ba-pulse">3D INTERACTIVE INSPECT</div>
+          <div class="mob-canvas-box-3d" id="canvas-box-3d-inspect">
+            <!-- Three.js 캔버스가 동적으로 삽입됨 -->
           </div>
           <div class="mob-card-info">
-            <h3 class="mob-card-title">2D 평면 토큰</h3>
-            <p class="mob-card-desc">정사각형 기반의 깔끔한 전술 배지 형태. 붉은 십자 헤일로, 검은 제복모와 금색 십자 뱃지, 붉은 넥타이와 날개 적용.</p>
-            <div class="mob-tags">
-              <span>#2D평면</span>
-              <span>#부유헤일로</span>
-              <span>#제복모</span>
-              <span>#붉은넥타이</span>
-            </div>
+            <h3 class="mob-card-title">정실부 모브 3D 모델 (360° 회전)</h3>
+            <p class="mob-card-desc">🖱️ 마우스로 드래그하여 전후좌우 360도 자유롭게 돌려보세요! (미조작 시 자동 회전)</p>
           </div>
         </div>
 
-        <!-- 2.5D 카드 -->
-        <div class="mob-card highlight">
-          <div class="mob-card-badge ba-pulse">2.5D ISOMETRIC CUBE</div>
-          <div class="mob-canvas-box">
-            <canvas id="canvas-mob-25d" width="260" height="260"></canvas>
-          </div>
-          <div class="mob-card-info">
-            <h3 class="mob-card-title">2.5D 입체 쿼터뷰 큐브</h3>
-            <p class="mob-card-desc">원근감(Z깊이)과 음영이 들어간 쿼터뷰 입체 블록. 3D 타원 투영 헤일로, 입체 날개, 바닥 동적 그림자 적용.</p>
-            <div class="mob-tags">
-              <span>#2.5D입체</span>
-              <span>#쿼터뷰</span>
-              <span>#동적그림자</span>
-              <span>#렉제로</span>
+        <!-- 3D 사양 브리핑 카드 -->
+        <div class="mob-card">
+          <div class="mob-card-badge">DESIGN BRIEFING</div>
+          <div class="mob-spec-list">
+            <div class="mob-spec-item">
+              <span class="spec-label">👒 베레모:</span>
+              <span class="spec-val">우측으로 비스듬히 기울어진 3D 검은색 베레모 + 측면 은색/레드 뱃지</span>
+            </div>
+            <div class="mob-spec-item">
+              <span class="spec-label">✨ 헤일로:</span>
+              <span class="spec-val">공중에 3D로 떠서 살랑살랑 부유하는 핑크빛 붉은색 링(Ring) 광배</span>
+            </div>
+            <div class="mob-spec-item">
+              <span class="spec-label">💇 헤어&초커:</span>
+              <span class="spec-val">눈을 덮는 짙은 흑발 뱅 앞머리, 등 뒤로 길게 늘어뜨린 생머리, 목의 검은 초커</span>
+            </div>
+            <div class="mob-spec-item">
+              <span class="spec-label">👔 세일러복:</span>
+              <span class="spec-val">칼라와 치마의 선명한 붉은 2줄 라인 + 가슴에 묶인 붉은색 세일러 스카프</span>
+            </div>
+            <div class="mob-spec-item">
+              <span class="spec-label">⚡ 최적화:</span>
+              <span class="spec-val">1회 메모리 캐싱으로 매 프레임 재호출 없음 (렉 제로 60fps 보장)</span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 하단: WASD 인터랙티브 이동 체험 필드 -->
+      <!-- 하단: 3D 실시간 필드 조작 체험 (WASD / 방향키) -->
       <div class="mob-playground-card">
         <div class="playground-header">
           <div class="playground-title-row">
-            <span class="playground-title">🎮 2.5D 정실부 모브 실시간 조작 필드 (WASD 탐험 체험)</span>
-            <span class="playground-ctrl-hint">키보드 [W, A, S, D] 또는 [방향키]로 모브를 움직여보세요!</span>
+            <span class="playground-title">🎮 3D 실시간 필드 탐험 조작 (WASD / 방향키)</span>
+            <span class="playground-ctrl-hint">키보드 [W, A, S, D] 또는 [방향키]로 3D 모브를 조작해보세요!</span>
           </div>
         </div>
-        <div class="playground-canvas-box">
-          <canvas id="canvas-mob-playground"></canvas>
+        <div class="playground-canvas-box-3d" id="canvas-box-3d-playground">
+          <!-- Three.js 캔버스가 동적으로 삽입됨 -->
           <div class="playground-hud">
-            <div class="hud-stat" id="mob-pos-hud">좌표: X: 0, Y: 0</div>
+            <div class="hud-stat" id="mob-pos-hud">3D 위치: X: 0.0, Z: 0.0</div>
             <div class="hud-stat">상태: <span id="mob-state-hud" style="color: #38bdf8;">대기 (IDLE)</span></div>
+            <div class="hud-stat">시점: <span>블아 쿼터뷰 3D 카메라</span></div>
           </div>
         </div>
       </div>
     </main>
   </div>
 
-  <script src="js/mob_renderer.js?v=2.0.2"></script>
-  <script src="js/map_data.js?v=2.0.2"></script>
-  <script src="js/map.js?v=2.0.2"></script>
-  <script src="js/main.js?v=2.0.2"></script>
+  <script src="js/three.min.js"></script>
+  <script src="js/mob_3d.js?v=3.0.0"></script>
+  <script src="js/mob_3d_viewer.js?v=3.0.0"></script>
+  <script src="js/mob_renderer.js?v=3.0.0"></script>
+  <script src="js/map_data.js?v=3.0.0"></script>
+  <script src="js/map.js?v=3.0.0"></script>
+  <script src="js/main.js?v=3.0.0"></script>
 </body>
 </html>
