@@ -14,7 +14,7 @@ class KivotosMapRenderer {
     this.selectedRegion = null;
     this.animTime = 0;
 
-    // 반응형 스케일 및 오프셋 계산용
+    // 반응형 스케일 및 오프셋
     this.scale = 1.0;
     this.offsetX = 0;
     this.offsetY = 0;
@@ -30,9 +30,10 @@ class KivotosMapRenderer {
     this.canvas.width = rect.width;
     this.canvas.height = rect.height;
 
-    // 1000 x 850 viewBox를 캔버스 중앙에 비율 유지하며 피팅
-    const scaleX = (this.canvas.width - 40) / this.data.viewBox.width;
-    const scaleY = (this.canvas.height - 40) / this.data.viewBox.height;
+    // 1200 x 984 viewBox를 캔버스 중앙에 여백 30px 두고 피팅
+    const pad = 24;
+    const scaleX = (this.canvas.width - pad * 2) / this.data.viewBox.width;
+    const scaleY = (this.canvas.height - pad * 2) / this.data.viewBox.height;
     this.scale = Math.min(scaleX, scaleY);
 
     this.offsetX = (this.canvas.width - this.data.viewBox.width * this.scale) / 2;
@@ -42,7 +43,7 @@ class KivotosMapRenderer {
   initEvents() {
     window.addEventListener('resize', () => this.resize());
 
-    // 마우스 호버 감지
+    // 마우스 이동 시 정확한 다각형 판정
     this.canvas.addEventListener('mousemove', (e) => {
       const rect = this.canvas.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
@@ -69,7 +70,7 @@ class KivotosMapRenderer {
       this.updateInspectorPanel(this.selectedRegion);
     });
 
-    // 마우스 클릭 (구역 선택)
+    // 클릭 이벤트
     this.canvas.addEventListener('click', () => {
       if (!this.hoveredRegion) return;
 
@@ -83,7 +84,7 @@ class KivotosMapRenderer {
     });
   }
 
-  // 좌표계 변환: 캔버스 픽셀 -> 1000x850 맵 가상 좌표
+  // 좌표계 변환: 캔버스 픽셀 -> 가상 맵 좌표
   canvasToMap(x, y) {
     return {
       x: (x - this.offsetX) / this.scale,
@@ -91,7 +92,7 @@ class KivotosMapRenderer {
     };
   }
 
-  // 맵 가상 좌표 -> 캔버스 픽셀
+  // 가상 맵 좌표 -> 캔버스 픽셀
   mapToCanvas(x, y) {
     return {
       x: this.offsetX + x * this.scale,
@@ -132,18 +133,22 @@ class KivotosMapRenderer {
 
     ctx.clearRect(0, 0, w, h);
 
-    // 1. 전술 홀로그램 배경 그리드 & 스캔라인
+    // 1. 전술 홀로그램 배경 격자 & 서쪽 바다 해안선
     this.drawHoloGrid(ctx, w, h);
+    this.drawWestOcean(ctx);
 
-    // 2. 수로 및 강줄기 렌더링 (장예카 / 아라바 수로)
-    this.drawWaterways(ctx);
-
-    // 3. 지역 폴리곤 렌더링
+    // 2. 모든 지역 폴리곤 렌더링 (겹침 없는 무결점 지형)
     for (const region of this.data.regions) {
       this.drawRegion(ctx, region);
     }
 
-    // 4. 지역 라벨 & 아이콘/자물쇠 렌더링
+    // 3. 주요 수로 (장예카 대수로 & 아라바 강가 지류)
+    this.drawWaterways(ctx);
+
+    // 4. 서쪽 외해 군도 거점 (마에스트로의 저택 등)
+    this.drawWestIslands(ctx);
+
+    // 5. 지역 라벨 & 엠블럼 / 자물쇠
     for (const region of this.data.regions) {
       this.drawRegionLabel(ctx, region);
     }
@@ -153,7 +158,7 @@ class KivotosMapRenderer {
     ctx.save();
     ctx.strokeStyle = 'rgba(56, 189, 248, 0.04)';
     ctx.lineWidth = 1;
-    const step = 40;
+    const step = 45;
 
     for (let x = 0; x < w; x += step) {
       ctx.beginPath();
@@ -169,19 +174,30 @@ class KivotosMapRenderer {
     }
 
     // 모서리 전술 조준 브래킷
-    const m = 18;
-    const blen = 24;
+    const m = 16;
+    const blen = 22;
     ctx.strokeStyle = 'rgba(0, 240, 255, 0.35)';
     ctx.lineWidth = 2;
 
-    // 좌상단
     ctx.beginPath(); ctx.moveTo(m, m + blen); ctx.lineTo(m, m); ctx.lineTo(m + blen, m); ctx.stroke();
-    // 우상단
     ctx.beginPath(); ctx.moveTo(w - m - blen, m); ctx.lineTo(w - m, m); ctx.lineTo(w - m, m + blen); ctx.stroke();
-    // 좌하단
     ctx.beginPath(); ctx.moveTo(m, h - m - blen); ctx.lineTo(m, h - m); ctx.lineTo(m + blen, h - m); ctx.stroke();
-    // 우하단
     ctx.beginPath(); ctx.moveTo(w - m - blen, h - m); ctx.lineTo(w - m, h - m); ctx.lineTo(w - m, h - m - blen); ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // 서쪽 바다 해안 수역 효과
+  drawWestOcean(ctx) {
+    ctx.save();
+    const seaTop = this.mapToCanvas(0, 0);
+    const seaBottom = this.mapToCanvas(220, 984);
+
+    const grad = ctx.createLinearGradient(seaTop.x, 0, seaBottom.x, 0);
+    grad.addColorStop(0, 'rgba(2, 132, 199, 0.14)');
+    grad.addColorStop(1, 'rgba(2, 6, 23, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, seaBottom.x + 40, this.canvas.height);
 
     ctx.restore();
   }
@@ -200,20 +216,52 @@ class KivotosMapRenderer {
         ctx.lineTo(pt.x, pt.y);
       }
 
-      // 푸른 발광 수로 효과
-      ctx.strokeStyle = 'rgba(14, 165, 233, 0.35)';
+      // 발광 수로 레이어드 효과
+      ctx.strokeStyle = 'rgba(14, 165, 233, 0.45)';
       ctx.lineWidth = 14 * this.scale;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.stroke();
 
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)';
       ctx.lineWidth = 5 * this.scale;
       ctx.stroke();
 
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.5 * this.scale;
+      ctx.lineWidth = 1.6 * this.scale;
       ctx.stroke();
+    }
+
+    // 장예카 텍스트 마커
+    const riverTextPos = this.mapToCanvas(780, 770);
+    ctx.font = `700 ${Math.round(10 * this.scale)}px 'Noto Sans KR', sans-serif`;
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.85)';
+    ctx.textAlign = 'center';
+    ctx.fillText('≈ 장예카 대수로 ≈', riverTextPos.x, riverTextPos.y - 12 * this.scale);
+
+    ctx.restore();
+  }
+
+  drawWestIslands(ctx) {
+    if (!this.data.westIslands) return;
+    ctx.save();
+    for (const isl of this.data.westIslands) {
+      const c = this.mapToCanvas(isl.x, isl.y);
+      const r = isl.r * this.scale;
+
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.65)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+      ctx.lineWidth = 1.2 * this.scale;
+      ctx.setLineDash([3 * this.scale, 2 * this.scale]);
+      ctx.stroke();
+
+      ctx.font = `600 ${Math.round(9 * this.scale)}px 'Noto Sans KR', sans-serif`;
+      ctx.fillStyle = '#64748b';
+      ctx.textAlign = 'center';
+      ctx.fillText(isl.name, c.x, c.y + r + 11 * this.scale);
     }
     ctx.restore();
   }
@@ -240,14 +288,14 @@ class KivotosMapRenderer {
 
     // 1. 내부 채우기 (Fill)
     if (isLocked) {
-      // 잠긴 구역: 어두운 회색 빗금 또는 슬레이트 그레이 톤
+      // 잠긴 구역 (미개척)
       if (isHovered) {
         ctx.fillStyle = 'rgba(51, 65, 85, 0.45)';
       } else {
         ctx.fillStyle = 'rgba(15, 23, 42, 0.65)';
       }
     } else {
-      // 해금된 구역: 시안/학원 고유 컬러 홀로그램 톤
+      // 해금된 정규 학원
       if (isSelected) {
         ctx.fillStyle = region.fillColor.replace(/[\d\.]+\)$/, '0.45)');
       } else if (isHovered) {
@@ -260,17 +308,17 @@ class KivotosMapRenderer {
 
     // 2. 외곽선 테두리 (Border)
     if (isLocked) {
-      ctx.strokeStyle = isHovered ? 'rgba(148, 163, 184, 0.7)' : 'rgba(71, 85, 105, 0.5)';
-      ctx.lineWidth = (isHovered ? 2.5 : 1.5) * this.scale;
-      ctx.setLineDash([6 * this.scale, 4 * this.scale]); // 잠긴 구역 점선
+      ctx.strokeStyle = isHovered ? 'rgba(148, 163, 184, 0.7)' : 'rgba(71, 85, 105, 0.45)';
+      ctx.lineWidth = (isHovered ? 2.2 : 1.4) * this.scale;
+      ctx.setLineDash([5 * this.scale, 3.5 * this.scale]);
     } else {
       ctx.strokeStyle = isSelected ? '#00f0ff' : (isHovered ? '#ffffff' : region.borderColor);
-      ctx.lineWidth = (isHovered || isSelected ? 3.0 : 1.8) * this.scale;
-      ctx.setLineDash([]); // 실선
+      ctx.lineWidth = (isHovered || isSelected ? 2.8 : 1.6) * this.scale;
+      ctx.setLineDash([]);
 
       if (isHovered || isSelected) {
         ctx.shadowColor = region.color;
-        ctx.shadowBlur = 16 * this.scale;
+        ctx.shadowBlur = 14 * this.scale;
       }
     }
     ctx.stroke();
@@ -288,36 +336,34 @@ class KivotosMapRenderer {
     ctx.textBaseline = 'middle';
 
     if (isLocked) {
-      // 잠긴 구역 렌더링: 🔒 자물쇠 아이콘 + '???' 표기
+      // 잠긴 구역: 🔒 + ??? + 마우스 올릴 시 구역명
       const pulseLock = 1 + Math.sin(this.animTime * 2) * 0.05;
 
-      ctx.font = `${Math.round(18 * this.scale * pulseLock)}px sans-serif`;
-      ctx.fillText('🔒', c.x, c.y - 10 * this.scale);
+      ctx.font = `${Math.round(16 * this.scale * pulseLock)}px sans-serif`;
+      ctx.fillText('🔒', c.x, c.y - 9 * this.scale);
 
-      ctx.font = `900 ${Math.round(15 * this.scale)}px Montserrat, 'Noto Sans KR', sans-serif`;
+      ctx.font = `900 ${Math.round(14 * this.scale)}px Montserrat, 'Noto Sans KR', sans-serif`;
       ctx.fillStyle = isHovered ? '#cbd5e1' : '#64748b';
-      ctx.fillText('???', c.x, c.y + 12 * this.scale);
+      ctx.fillText('???', c.x, c.y + 11 * this.scale);
 
       if (isHovered) {
-        ctx.font = `600 ${Math.round(10 * this.scale)}px 'Noto Sans KR', sans-serif`;
+        ctx.font = `600 ${Math.round(9.5 * this.scale)}px 'Noto Sans KR', sans-serif`;
         ctx.fillStyle = '#94a3b8';
-        ctx.fillText(`[ ${region.shortName} - 미개척 ]`, c.x, c.y + 28 * this.scale);
+        ctx.fillText(`[ ${region.shortName} - 미개척 ]`, c.x, c.y + 26 * this.scale);
       }
     } else {
-      // 해금된 정규 학원 렌더링: 엠블럼 + 학원명
-      const floatY = Math.sin(this.animTime * 1.5 + region.center.x) * 2;
+      // 해금된 학원: 엠블럼 + 한글 학원명 + 영문 코드
+      const floatY = Math.sin(this.animTime * 1.5 + region.center.x) * 1.8;
 
       ctx.font = `${Math.round(20 * this.scale)}px sans-serif`;
       ctx.fillText(region.emblem, c.x, c.y - 12 * this.scale + floatY);
 
-      // 메인 학원명
-      ctx.font = `900 ${Math.round(14 * this.scale)}px 'Noto Sans KR', sans-serif`;
+      ctx.font = `900 ${Math.round(14.5 * this.scale)}px 'Noto Sans KR', sans-serif`;
       ctx.fillStyle = '#ffffff';
       ctx.shadowColor = region.color;
       ctx.shadowBlur = isHovered ? 12 : 5;
       ctx.fillText(region.shortName, c.x, c.y + 10 * this.scale + floatY);
 
-      // 영문 코드 네임 태그
       ctx.font = `700 ${Math.round(8.5 * this.scale)}px Montserrat, sans-serif`;
       ctx.fillStyle = region.color;
       ctx.shadowBlur = 0;
@@ -327,7 +373,6 @@ class KivotosMapRenderer {
     ctx.restore();
   }
 
-  // 우측 실시간 인스펙터 정보창 갱신
   updateInspectorPanel(region) {
     if (!this.infoPanel) return;
 
@@ -385,7 +430,6 @@ class KivotosMapRenderer {
       </div>
     `;
 
-    // 출격 버튼 이벤트 연결
     if (!isLocked) {
       const deployBtn = document.getElementById('btn-select-academy');
       if (deployBtn) {
