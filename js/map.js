@@ -181,17 +181,19 @@ class KivotosMapRenderer {
 
   drawHoloGrid(ctx, w, h) {
     ctx.save();
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.04)';
-    ctx.lineWidth = 1;
     const step = 45;
 
-    for (let x = 0; x < w; x += step) {
+    for (let x = 0, i = 0; x < w; x += step, i++) {
+      ctx.strokeStyle = (i % 3 === 0) ? 'rgba(56, 189, 248, 0.22)' : 'rgba(56, 189, 248, 0.10)';
+      ctx.lineWidth = (i % 3 === 0) ? 1.5 : 1;
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, h);
       ctx.stroke();
     }
-    for (let y = 0; y < h; y += step) {
+    for (let y = 0, i = 0; y < h; y += step, i++) {
+      ctx.strokeStyle = (i % 3 === 0) ? 'rgba(56, 189, 248, 0.22)' : 'rgba(56, 189, 248, 0.10)';
+      ctx.lineWidth = (i % 3 === 0) ? 1.5 : 1;
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(w, y);
@@ -201,8 +203,8 @@ class KivotosMapRenderer {
     // 모서리 전술 조준 브래킷
     const m = 16;
     const blen = 22;
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.35)';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.65)';
+    ctx.lineWidth = 2.5;
 
     ctx.beginPath(); ctx.moveTo(m, m + blen); ctx.lineTo(m, m); ctx.lineTo(m + blen, m); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(w - m - blen, m); ctx.lineTo(w - m, m); ctx.lineTo(w - m, m + blen); ctx.stroke();
@@ -219,8 +221,8 @@ class KivotosMapRenderer {
     const seaBottom = this.mapToCanvas(220, 984);
 
     const grad = ctx.createLinearGradient(seaTop.x, 0, seaBottom.x, 0);
-    grad.addColorStop(0, 'rgba(2, 132, 199, 0.14)');
-    grad.addColorStop(1, 'rgba(2, 6, 23, 0)');
+    grad.addColorStop(0, 'rgba(56, 189, 248, 0.28)');
+    grad.addColorStop(1, 'rgba(14, 165, 233, 0.02)');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, seaBottom.x + 40, this.canvas.height);
 
@@ -311,40 +313,42 @@ class KivotosMapRenderer {
     }
     ctx.closePath();
 
-    // 1. 내부 채우기 (Fill)
+    // 1. 내부 채우기 (밝고 화사한 전술 구역 컬러링)
     if (isLocked) {
-      // 잠긴 구역 (미개척)
+      // 잠긴 구역도 각 학원별 고유 색상을 밝고 산뜻하게 표시
       if (isHovered) {
-        ctx.fillStyle = 'rgba(51, 65, 85, 0.45)';
+        ctx.fillStyle = region.fillColor.replace(/[\d\.]+\)$/, '0.48)');
       } else {
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.65)';
+        ctx.fillStyle = region.fillColor;
       }
     } else {
-      // 해금된 정규 학원
+      // 해금된 정규 학원 (트리니티 등)
       if (isSelected) {
-        ctx.fillStyle = region.fillColor.replace(/[\d\.]+\)$/, '0.45)');
+        ctx.fillStyle = region.fillColor.replace(/[\d\.]+\)$/, '0.65)');
       } else if (isHovered) {
-        ctx.fillStyle = region.fillColor.replace(/[\d\.]+\)$/, '0.35)');
+        ctx.fillStyle = region.fillColor.replace(/[\d\.]+\)$/, '0.52)');
       } else {
         ctx.fillStyle = region.fillColor;
       }
     }
     ctx.fill();
 
-    // 2. 외곽선 테두리 (Border)
+    // 2. 외곽선 테두리 (선명한 네온 라인)
     if (isLocked) {
-      ctx.strokeStyle = isHovered ? 'rgba(148, 163, 184, 0.7)' : 'rgba(71, 85, 105, 0.45)';
-      ctx.lineWidth = (isHovered ? 2.2 : 1.4) * this.scale;
-      ctx.setLineDash([5 * this.scale, 3.5 * this.scale]);
+      ctx.strokeStyle = isHovered ? '#ffffff' : region.borderColor;
+      ctx.lineWidth = (isHovered ? 2.8 : 1.8) * this.scale;
+      ctx.setLineDash([6 * this.scale, 4 * this.scale]);
+      if (isHovered) {
+        ctx.shadowColor = region.color;
+        ctx.shadowBlur = 12 * this.scale;
+      }
     } else {
       ctx.strokeStyle = isSelected ? '#00f0ff' : (isHovered ? '#ffffff' : region.borderColor);
-      ctx.lineWidth = (isHovered || isSelected ? 2.8 : 1.6) * this.scale;
+      ctx.lineWidth = (isHovered || isSelected ? 3.5 : 2.4) * this.scale;
       ctx.setLineDash([]);
 
-      if (isHovered || isSelected) {
-        ctx.shadowColor = region.color;
-        ctx.shadowBlur = 14 * this.scale;
-      }
+      ctx.shadowColor = region.color;
+      ctx.shadowBlur = (isHovered || isSelected ? 18 : 10) * this.scale;
     }
     ctx.stroke();
 
@@ -361,38 +365,46 @@ class KivotosMapRenderer {
     ctx.textBaseline = 'middle';
 
     if (isLocked) {
-      // 잠긴 구역: 🔒 + ??? + 마우스 올릴 시 구역명
+      // 잠긴 구역: 🔒 아이콘 + 학원명
       const pulseLock = 1 + Math.sin(this.animTime * 2) * 0.05;
 
-      ctx.font = `${Math.round(16 * this.scale * pulseLock)}px sans-serif`;
-      ctx.fillText('🔒', c.x, c.y - 9 * this.scale);
+      ctx.font = `${Math.round(18 * this.scale * pulseLock)}px sans-serif`;
+      ctx.fillText('🔒', c.x, c.y - 10 * this.scale);
 
-      ctx.font = `900 ${Math.round(14 * this.scale)}px Montserrat, 'Noto Sans KR', sans-serif`;
-      ctx.fillStyle = isHovered ? '#cbd5e1' : '#64748b';
-      ctx.fillText('???', c.x, c.y + 11 * this.scale);
+      ctx.font = `900 ${Math.round(15 * this.scale)}px Montserrat, 'Noto Sans KR', sans-serif`;
+      ctx.strokeStyle = 'rgba(10, 15, 26, 0.9)';
+      ctx.lineWidth = 4 * this.scale;
+      ctx.strokeText(region.shortName, c.x, c.y + 11 * this.scale);
+      ctx.fillStyle = isHovered ? '#ffffff' : '#f1f5f9';
+      ctx.fillText(region.shortName, c.x, c.y + 11 * this.scale);
 
       if (isHovered) {
-        ctx.font = `600 ${Math.round(9.5 * this.scale)}px 'Noto Sans KR', sans-serif`;
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillText(`[ ${region.shortName} - 미개척 ]`, c.x, c.y + 26 * this.scale);
+        ctx.font = `700 ${Math.round(11 * this.scale)}px 'Noto Sans KR', sans-serif`;
+        ctx.fillStyle = '#38bdf8';
+        ctx.strokeText(`[ 🔒 추후 개방 ]`, c.x, c.y + 28 * this.scale);
+        ctx.fillText(`[ 🔒 추후 개방 ]`, c.x, c.y + 28 * this.scale);
       }
     } else {
       // 해금된 학원: 엠블럼 + 한글 학원명 + 영문 코드
       const floatY = Math.sin(this.animTime * 1.5 + region.center.x) * 1.8;
 
-      ctx.font = `${Math.round(20 * this.scale)}px sans-serif`;
-      ctx.fillText(region.emblem, c.x, c.y - 12 * this.scale + floatY);
+      ctx.font = `${Math.round(24 * this.scale)}px sans-serif`;
+      ctx.fillText(region.emblem, c.x, c.y - 14 * this.scale + floatY);
 
-      ctx.font = `900 ${Math.round(14.5 * this.scale)}px 'Noto Sans KR', sans-serif`;
+      ctx.font = `900 ${Math.round(16 * this.scale)}px 'Noto Sans KR', sans-serif`;
+      ctx.strokeStyle = 'rgba(10, 15, 26, 0.9)';
+      ctx.lineWidth = 4.5 * this.scale;
+      ctx.strokeText(region.shortName, c.x, c.y + 11 * this.scale + floatY);
       ctx.fillStyle = '#ffffff';
       ctx.shadowColor = region.color;
-      ctx.shadowBlur = isHovered ? 12 : 5;
-      ctx.fillText(region.shortName, c.x, c.y + 10 * this.scale + floatY);
+      ctx.shadowBlur = isHovered ? 16 : 8;
+      ctx.fillText(region.shortName, c.x, c.y + 11 * this.scale + floatY);
 
-      ctx.font = `700 ${Math.round(8.5 * this.scale)}px Montserrat, sans-serif`;
+      ctx.font = `800 ${Math.round(10.5 * this.scale)}px Montserrat, sans-serif`;
       ctx.fillStyle = region.color;
       ctx.shadowBlur = 0;
-      ctx.fillText(region.enName.split(' ')[0], c.x, c.y + 24 * this.scale + floatY);
+      ctx.strokeText(region.enName.split(' ')[0], c.x, c.y + 28 * this.scale + floatY);
+      ctx.fillText(region.enName.split(' ')[0], c.x, c.y + 28 * this.scale + floatY);
     }
 
     ctx.restore();
