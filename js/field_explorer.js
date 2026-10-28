@@ -300,24 +300,38 @@ class JTFFieldExplorer {
     if (this.gunRackMesh) this.gunRackMesh.visible = false;
     if (this.gunMarker) this.gunMarker.visible = false;
 
-    // 모브 등 뒤에 장착할 3D 소총 모델 생성
+    // 모브 등 뒤에 장착할 3D 소총 모델 생성 (몸체를 관통하지 않고 등 뒤에 완벽 밀착)
     this.playerGunMesh = new THREE.Group();
 
-    const stockGeo = new THREE.BoxGeometry(0.08, 0.12, 1.6);
-    const stockMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.6 });
+    // 1. 소총 개머리판 및 리시버 (나무 몸통) - Y축 방향으로 배치하여 두께(Z) 최소화
+    const stockGeo = new THREE.BoxGeometry(0.08, 1.15, 0.05);
+    const stockMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.65 });
     const stock = new THREE.Mesh(stockGeo, stockMat);
+    stock.position.set(0, -0.15, 0);
     this.playerGunMesh.add(stock);
 
-    const barrelGeo = new THREE.CylinderGeometry(0.025, 0.025, 1.0, 8);
-    const barrelMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.2 });
+    // 2. 총열 (금속 바렐) - Y축 위쪽으로 연장
+    const barrelGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.75, 8);
+    const barrelMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.85, roughness: 0.2 });
     const barrel = new THREE.Mesh(barrelGeo, barrelMat);
-    barrel.rotation.x = Math.PI / 2;
-    barrel.position.set(0, 0.03, 0.9);
+    barrel.position.set(0, 0.75, 0);
     this.playerGunMesh.add(barrel);
 
-    // 등 뒤에 비스듬히 멜빵으로 착용한 위치
-    this.playerGunMesh.position.set(0.18, 0.65, -0.38);
-    this.playerGunMesh.rotation.set(0.2, 0, 0.55);
+    // 3. 노리쇠 및 가늠쇠 디테일
+    const boltGeo = new THREE.BoxGeometry(0.06, 0.04, 0.04);
+    const boltMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9, roughness: 0.2 });
+    const bolt = new THREE.Mesh(boltGeo, boltMat);
+    bolt.position.set(0.05, 0.12, 0.02);
+    this.playerGunMesh.add(bolt);
+
+    const sightGeo = new THREE.BoxGeometry(0.025, 0.05, 0.03);
+    const sight = new THREE.Mesh(sightGeo, barrelMat);
+    sight.position.set(0, 1.12, 0.02);
+    this.playerGunMesh.add(sight);
+
+    // 4. 등 뒤에 멜빵으로 대각선 장착 (몸통 Z: -0.325보다 확실히 뒤인 Z = -0.42에 밀착)
+    this.playerGunMesh.position.set(0.06, 0.72, -0.42);
+    this.playerGunMesh.rotation.set(0.04, 0.08, -0.56);
     this.playerMob.add(this.playerGunMesh);
 
     // 상단 HUD 갱신

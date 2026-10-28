@@ -461,8 +461,8 @@ class TrinityDistrictCrawler {
         id: 'node_hg_c1',
         name: '코스 1: 교정 외곽 정찰',
         enName: 'STAGE 1: PERIMETER PATROL',
-        x: 2300,
-        y: 1750,
+        x: 2450,
+        y: 1980,
         status: 'active', // 🔴 활성 진입점
         type: 'scout',
         desc: '교정 외곽 철조망 부근에서 헬멧단의 이동 흔적을 정찰합니다.'
@@ -471,8 +471,8 @@ class TrinityDistrictCrawler {
         id: 'node_hg_c2',
         name: '코스 2: 골목길 단서 수색',
         enName: 'STAGE 2: ALLEYWAY SEARCH',
-        x: 1950,
-        y: 1300,
+        x: 2300,
+        y: 1760,
         status: 'pending', // 🟡 대기
         type: 'investigate',
         desc: '외곽 상가 골목길에서 버려진 탄피와 은신처 표식을 수색합니다.'
@@ -481,8 +481,8 @@ class TrinityDistrictCrawler {
         id: 'node_hg_c3',
         name: '코스 3: 은신처 입구 봉쇄',
         enName: 'STAGE 3: BLOCKADE ENTRANCE',
-        x: 1600,
-        y: 850,
+        x: 2150,
+        y: 1540,
         status: 'pending', // 🟡 대기
         type: 'skirmish',
         desc: '폐창고 아지트 앞 경계조를 급습하여 퇴로를 차단합니다.'
@@ -491,8 +491,8 @@ class TrinityDistrictCrawler {
         id: 'node_hg_c4_boss',
         name: '코스 4: 💀 헬멧단 결전 (확정)',
         enName: 'FINAL STAGE: HELMET GANG BOSS',
-        x: 1250,
-        y: 500,
+        x: 2000,
+        y: 1320,
         status: 'pending', // 🟡 대기 (최종 확정 전투)
         type: 'boss',
         desc: '헬멧단 아지트 심장부에서 무장 두목을 제압하고 의뢰를 완수합니다!'
@@ -511,7 +511,7 @@ class TrinityDistrictCrawler {
     console.log('[DISTRICT CRAWLER] 헬멧단 4코스 직렬 노드 자동 개척 완료!');
   }
 
-  // 2. 의뢰 미수락/거절 시: 3갈래 자유 탐색 노드 개척
+  // 2. 의뢰 미수락/거절 시: 3갈래 자유 탐색 노드 개척 (적정 거리 배치)
   setupFreeExplorationBranches() {
     // 본부 노드만 남기고 기존 코스 초기화
     this.nodes = this.nodes.filter(n => n.id === 'node_jtf_hq');
@@ -522,8 +522,8 @@ class TrinityDistrictCrawler {
         id: 'node_branch_1',
         name: '분기 A: 고딕 대성당 회랑',
         enName: 'BRANCH A: CATHEDRAL',
-        x: 3400,
-        y: 1650,
+        x: 2880,
+        y: 1950,
         status: 'active', // 🔴
         type: 'event',
         desc: '고딕 대성당 회랑에서 주변을 순찰하며 단서를 탐색합니다.'
@@ -532,8 +532,8 @@ class TrinityDistrictCrawler {
         id: 'node_branch_2',
         name: '분기 B: 중앙 분수 광장',
         enName: 'BRANCH B: FOUNTAIN PLAZA',
-        x: 2600,
-        y: 2850,
+        x: 2780,
+        y: 2500,
         status: 'active', // 🔴
         type: 'rest',
         desc: '중앙 분수대 광장에서 보급품을 점검하고 휴식합니다.'
@@ -542,8 +542,8 @@ class TrinityDistrictCrawler {
         id: 'node_branch_3',
         name: '분기 C: 구교사 카타콤',
         enName: 'BRANCH C: CATACOMBS',
-        x: 1750,
-        y: 2650,
+        x: 2280,
+        y: 2360,
         status: 'active', // 🔴
         type: 'investigate',
         desc: '접근 통제된 구교사 지하 구역을 조사합니다.'
