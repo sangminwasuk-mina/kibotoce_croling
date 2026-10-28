@@ -408,21 +408,157 @@ class TrinityDistrictCrawler {
   handleNodeClick(node) {
     if (!node) return;
 
-    // 시작 노드 (정의실현부) 클릭 시: 확정 이벤트 [정의실현부 : 탐험] 팝업 모달
+    // 시작 노드 (정의실현부) 클릭 시: 본부 실내 탐험 모달
     if (node.id === 'node_jtf_hq') {
       this.openJTFExplorationModal(node);
       return;
     }
 
     if (node.status === 'active') {
+      // 1. 현재 노드로 플레이어 이동
       this.currentNodeId = node.id;
-      alert(`🚀 [거점 진입] ${node.name}\n\n정실부 모브가 해당 거점으로 이동했습니다!`);
+
+      // 2. 현재 노드 클리어 완료 처리 (🔴 활성 -> 🟢 완료)
+      node.status = 'cleared';
+
+      // 3. 연결된 다음 대기(🟡) 노드 활성화 (🟡 대기 -> 🔴 활성)
+      const nextConns = this.connections.filter(c => c.from === node.id);
+      let unlockedCount = 0;
+      for (const conn of nextConns) {
+        const targetNode = this.nodes.find(n => n.id === conn.to);
+        if (targetNode && targetNode.status === 'pending') {
+          targetNode.status = 'active';
+          unlockedCount++;
+        }
+      }
+
+      // 4. 노드 유형별 알림 (콘텐츠 이벤트는 추후 추가, 현재는 시스템 골격 처리)
+      let typeLabel = '거점 작전';
+      if (node.type === 'boss') typeLabel = '💀 [확정 보스전] 헬멧단 결전';
+      else if (node.type === 'scout') typeLabel = '🔭 [외곽 정찰]';
+      else if (node.type === 'investigate') typeLabel = '🔍 [단서 수색]';
+      else if (node.type === 'skirmish') typeLabel = '⚔️ [전초전 진압]';
+      else if (node.type === 'rest') typeLabel = '☕ [보급 및 휴식]';
+
+      this.updateHUDText(`[거점 확보] ${node.name} 완수!`);
+      alert(`🎯 [거점 이동 완료]\n\n${typeLabel}: ${node.name}\n\n정실부 모브가 거점에 도달하여 확보했습니다!\n${unlockedCount > 0 ? '(다음 연계 거점이 활성화되었습니다)' : '(해당 코스의 최종 목표를 달성했습니다!)'}`);
+
     } else if (node.status === 'pending') {
-      alert(`🔒 [선행 코스 필요] ${node.name}\n\n이전 거점을 먼저 클리어해야 진입할 수 있습니다.`);
+      alert(`🔒 [선행 코스 필요] ${node.name}\n\n이전 거점을 먼저 완수해야 진입할 수 있습니다.`);
     } else if (node.status === 'cleared') {
-      // 이미 완료된 거점도 실내 재탐험 가능
-      this.openJTFExplorationModal(node);
+      alert(`✅ [완료된 안전 구역] ${node.name}\n\n이미 완수된 거점입니다.`);
     }
+  }
+
+  // 1. 헬멧단 소탕의뢰 수락 시: 4단계 직렬 코스 자동 개척 (최종 4코스: 💀 헬멧단 확정 전투)
+  setupHelmetGangCourse() {
+    // 본부 노드만 남기고 기존 코스 초기화
+    this.nodes = this.nodes.filter(n => n.id === 'node_jtf_hq');
+    this.connections = [];
+
+    const courseNodes = [
+      {
+        id: 'node_hg_c1',
+        name: '코스 1: 교정 외곽 정찰',
+        enName: 'STAGE 1: PERIMETER PATROL',
+        x: 2300,
+        y: 1750,
+        status: 'active', // 🔴 활성 진입점
+        type: 'scout',
+        desc: '교정 외곽 철조망 부근에서 헬멧단의 이동 흔적을 정찰합니다.'
+      },
+      {
+        id: 'node_hg_c2',
+        name: '코스 2: 골목길 단서 수색',
+        enName: 'STAGE 2: ALLEYWAY SEARCH',
+        x: 1950,
+        y: 1300,
+        status: 'pending', // 🟡 대기
+        type: 'investigate',
+        desc: '외곽 상가 골목길에서 버려진 탄피와 은신처 표식을 수색합니다.'
+      },
+      {
+        id: 'node_hg_c3',
+        name: '코스 3: 은신처 입구 봉쇄',
+        enName: 'STAGE 3: BLOCKADE ENTRANCE',
+        x: 1600,
+        y: 850,
+        status: 'pending', // 🟡 대기
+        type: 'skirmish',
+        desc: '폐창고 아지트 앞 경계조를 급습하여 퇴로를 차단합니다.'
+      },
+      {
+        id: 'node_hg_c4_boss',
+        name: '코스 4: 💀 헬멧단 결전 (확정)',
+        enName: 'FINAL STAGE: HELMET GANG BOSS',
+        x: 1250,
+        y: 500,
+        status: 'pending', // 🟡 대기 (최종 확정 전투)
+        type: 'boss',
+        desc: '헬멧단 아지트 심장부에서 무장 두목을 제압하고 의뢰를 완수합니다!'
+      }
+    ];
+
+    this.nodes.push(...courseNodes);
+    this.connections.push(
+      { from: 'node_jtf_hq', to: 'node_hg_c1' },
+      { from: 'node_hg_c1', to: 'node_hg_c2' },
+      { from: 'node_hg_c2', to: 'node_hg_c3' },
+      { from: 'node_hg_c3', to: 'node_hg_c4_boss' }
+    );
+
+    this.updateHUDText('진행 중: [임무] 헬멧단 소탕의뢰 (코스 1/4 대기 중)');
+    console.log('[DISTRICT CRAWLER] 헬멧단 4코스 직렬 노드 자동 개척 완료!');
+  }
+
+  // 2. 의뢰 미수락/거절 시: 3갈래 자유 탐색 노드 개척
+  setupFreeExplorationBranches() {
+    // 본부 노드만 남기고 기존 코스 초기화
+    this.nodes = this.nodes.filter(n => n.id === 'node_jtf_hq');
+    this.connections = [];
+
+    const branchNodes = [
+      {
+        id: 'node_branch_1',
+        name: '분기 A: 고딕 대성당 회랑',
+        enName: 'BRANCH A: CATHEDRAL',
+        x: 3400,
+        y: 1650,
+        status: 'active', // 🔴
+        type: 'event',
+        desc: '고딕 대성당 회랑에서 주변을 순찰하며 단서를 탐색합니다.'
+      },
+      {
+        id: 'node_branch_2',
+        name: '분기 B: 중앙 분수 광장',
+        enName: 'BRANCH B: FOUNTAIN PLAZA',
+        x: 2600,
+        y: 2850,
+        status: 'active', // 🔴
+        type: 'rest',
+        desc: '중앙 분수대 광장에서 보급품을 점검하고 휴식합니다.'
+      },
+      {
+        id: 'node_branch_3',
+        name: '분기 C: 구교사 카타콤',
+        enName: 'BRANCH C: CATACOMBS',
+        x: 1750,
+        y: 2650,
+        status: 'active', // 🔴
+        type: 'investigate',
+        desc: '접근 통제된 구교사 지하 구역을 조사합니다.'
+      }
+    ];
+
+    this.nodes.push(...branchNodes);
+    this.connections.push(
+      { from: 'node_jtf_hq', to: 'node_branch_1' },
+      { from: 'node_jtf_hq', to: 'node_branch_2' },
+      { from: 'node_jtf_hq', to: 'node_branch_3' }
+    );
+
+    this.updateHUDText('자유 탐색 모드: 3갈래 경로 중 하나를 선택하십시오.');
+    console.log('[DISTRICT CRAWLER] 3갈래 자유 탐색 노드 개척 완료!');
   }
 
   // 정의실현부 : 탐험 모달 오픈 (최초 노드는 건너뛰기 불가, 오직 [입장] 버튼만 존재)

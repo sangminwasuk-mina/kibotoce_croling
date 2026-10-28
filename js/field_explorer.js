@@ -17,10 +17,21 @@ class JTFFieldExplorer {
     this.isRunning = false;
     this.animFrameId = null;
 
+    // 상호작용 및 무장/의뢰 상태
+    this.activeInteractable = null;
+    this.missionChoice = null; // 'helmet_gang', 'declined', or null
+    this.hasGun = false;
+
+    this.docMarker = null;
+    this.gunRackMesh = null;
+    this.gunMarker = null;
+    this.playerGunMesh = null;
+
     this.initScene();
     this.initPlayer();
     this.initEnvironment();
     this.initControls();
+    this.initModals();
   }
 
   initScene() {
@@ -191,12 +202,147 @@ class JTFFieldExplorer {
     desk.receiveShadow = true;
     this.scene.add(desk);
 
-    // 책상 위 서류철 및 전술 단말기
-    const docGeo = new THREE.BoxGeometry(0.8, 0.1, 1.2);
-    const docMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+    // 책상 위 임무 수배지 서류
+    const docGeo = new THREE.BoxGeometry(0.9, 0.08, 1.3);
+    const docMat = new THREE.MeshStandardMaterial({ color: 0xfef3c7, roughness: 0.5 });
     const doc = new THREE.Mesh(docGeo, docMat);
     doc.position.set(-1.8, 0.95, -3.5);
     this.scene.add(doc);
+
+    // 탁자 위 서류 상호작용 홀로그램 마커
+    const docMarkerGeo = new THREE.OctahedronGeometry(0.18, 0);
+    const docMarkerMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, wireframe: true });
+    this.docMarker = new THREE.Mesh(docMarkerGeo, docMarkerMat);
+    this.docMarker.position.set(-1.8, 1.6, -3.5);
+    this.scene.add(this.docMarker);
+
+    // 5. 왼쪽 벽면 총기 거치대 (정실부 제식 볼트액션 소총)
+    const rackBoardGeo = new THREE.BoxGeometry(0.25, 1.8, 3.2);
+    const rackBoardMat = new THREE.MeshStandardMaterial({
+      color: 0x334155,
+      roughness: 0.7,
+      metalness: 0.3
+    });
+    const rackBoard = new THREE.Mesh(rackBoardGeo, rackBoardMat);
+    rackBoard.position.set(-13.6, 2.2, 0.0);
+    this.scene.add(rackBoard);
+
+    // 총기 3D 메쉬 그룹 (리-엔필드 소총 형태)
+    this.gunRackMesh = new THREE.Group();
+
+    const stockGeo = new THREE.BoxGeometry(0.1, 0.16, 2.2);
+    const stockMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.6 });
+    const stock = new THREE.Mesh(stockGeo, stockMat);
+    this.gunRackMesh.add(stock);
+
+    const barrelGeo = new THREE.CylinderGeometry(0.035, 0.035, 1.4, 8);
+    const barrelMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.2 });
+    const barrel = new THREE.Mesh(barrelGeo, barrelMat);
+    barrel.rotation.x = Math.PI / 2;
+    barrel.position.set(0, 0.04, 1.2);
+    this.gunRackMesh.add(barrel);
+
+    const boltGeo = new THREE.BoxGeometry(0.08, 0.05, 0.05);
+    const boltMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9, roughness: 0.2 });
+    const bolt = new THREE.Mesh(boltGeo, boltMat);
+    bolt.position.set(0.07, 0.08, 0.1);
+    this.gunRackMesh.add(bolt);
+
+    this.gunRackMesh.position.set(-13.4, 2.2, 0.0);
+    this.scene.add(this.gunRackMesh);
+
+    // 총기 거치대 상단 전술 홀로그램 마커
+    const gunMarkerGeo = new THREE.OctahedronGeometry(0.22, 0);
+    const gunMarkerMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, wireframe: true });
+    this.gunMarker = new THREE.Mesh(gunMarkerGeo, gunMarkerMat);
+    this.gunMarker.position.set(-13.0, 3.3, 0.0);
+    this.scene.add(this.gunMarker);
+  }
+
+  initModals() {
+    const bountyModal = document.getElementById('bounty-modal');
+    const btnAccept = document.getElementById('btn-bounty-accept');
+    const btnDecline = document.getElementById('btn-bounty-decline');
+
+    if (btnAccept) {
+      btnAccept.onclick = () => {
+        this.missionChoice = 'helmet_gang';
+        if (bountyModal) bountyModal.classList.add('hidden');
+        this.updateFieldMissionHUD();
+        alert('📋 [임무 수락 완료]\n헬멧단 소탕의뢰를 수락했습니다!\n(본부 밖으로 나가면 4단계 작전 코스가 개척됩니다)');
+      };
+    }
+
+    if (btnDecline) {
+      btnDecline.onclick = () => {
+        this.missionChoice = 'declined';
+        if (bountyModal) bountyModal.classList.add('hidden');
+        this.updateFieldMissionHUD();
+        alert('🧭 [의뢰 거절 / 보류]\n자유 탐색 모드로 설정되었습니다.\n(본부 밖으로 나가면 3갈래 자유 탐색로가 개척됩니다)');
+      };
+    }
+  }
+
+  updateFieldMissionHUD() {
+    const banner = document.querySelector('#field-screen .hud-quest-banner span:nth-child(2)');
+    if (banner) {
+      if (this.missionChoice === 'helmet_gang') {
+        banner.innerText = '작전 수락: [헬멧단 소탕의뢰] 준비 완료 (본부를 나가면 4단계 코스 개척)';
+      } else if (this.missionChoice === 'declined') {
+        banner.innerText = '작전 모드: [자유 탐색 모드] (본부를 나가면 3갈래 분기 개척)';
+      }
+    }
+  }
+
+  equipGun() {
+    this.hasGun = true;
+
+    if (this.gunRackMesh) this.gunRackMesh.visible = false;
+    if (this.gunMarker) this.gunMarker.visible = false;
+
+    // 모브 등 뒤에 장착할 3D 소총 모델 생성
+    this.playerGunMesh = new THREE.Group();
+
+    const stockGeo = new THREE.BoxGeometry(0.08, 0.12, 1.6);
+    const stockMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.6 });
+    const stock = new THREE.Mesh(stockGeo, stockMat);
+    this.playerGunMesh.add(stock);
+
+    const barrelGeo = new THREE.CylinderGeometry(0.025, 0.025, 1.0, 8);
+    const barrelMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.2 });
+    const barrel = new THREE.Mesh(barrelGeo, barrelMat);
+    barrel.rotation.x = Math.PI / 2;
+    barrel.position.set(0, 0.03, 0.9);
+    this.playerGunMesh.add(barrel);
+
+    // 등 뒤에 비스듬히 멜빵으로 착용한 위치
+    this.playerGunMesh.position.set(0.18, 0.65, -0.38);
+    this.playerGunMesh.rotation.set(0.2, 0, 0.55);
+    this.playerMob.add(this.playerGunMesh);
+
+    // 상단 HUD 갱신
+    const weaponBadge = document.getElementById('hud-weapon-badge');
+    if (weaponBadge) {
+      weaponBadge.style.borderColor = '#22c55e';
+      weaponBadge.style.color = '#4ade80';
+      weaponBadge.style.background = 'rgba(34, 197, 94, 0.15)';
+      weaponBadge.innerHTML = '<span>🔫 무장: 정실부 제식 소총 (장착 완료)</span>';
+    }
+
+    alert('🔫 [무장 장착 완료]\n정의실현부 제식 볼트액션 소총을 획득했습니다!\n정실부 모브의 등 뒤에 소총이 장착되었습니다.');
+  }
+
+  handleInteraction() {
+    if (this.activeInteractable === 'desk') {
+      const bountyModal = document.getElementById('bounty-modal');
+      if (bountyModal) bountyModal.classList.remove('hidden');
+    } else if (this.activeInteractable === 'gun') {
+      if (!this.hasGun) {
+        this.equipGun();
+      } else {
+        alert('🔫 정실부 제식 볼트액션 소총이 이미 장착되어 있습니다.');
+      }
+    }
   }
 
   initControls() {
@@ -212,7 +358,12 @@ class JTFFieldExplorer {
         this.playerState.isJumping = true;
       }
 
-      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd', ' ', 'shift'].includes(k) || e.code === 'Space') {
+      // 상호작용 트리거: [Z] 키
+      if (k === 'z') {
+        this.handleInteraction();
+      }
+
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd', ' ', 'shift', 'z'].includes(k) || e.code === 'Space') {
         const fieldScreen = document.getElementById('field-screen');
         if (fieldScreen && !fieldScreen.classList.contains('hidden')) {
           e.preventDefault();
@@ -358,10 +509,46 @@ class JTFFieldExplorer {
     this.camera.position.x += (camTargetX - this.camera.position.x) * 0.08;
     this.camera.position.z += (camTargetZ - this.camera.position.z) * 0.08;
 
-    // 7. 3D 애니메이션 갱신 (이동, 달리기, 점프 전달)
+    // 7. 홀로그램 상호작용 마커 회전 & 부유 애니메이션
+    if (this.docMarker) {
+      this.docMarker.rotation.y += delta * 2.0;
+      this.docMarker.position.y = 1.6 + Math.sin(performance.now() * 0.003) * 0.08;
+    }
+    if (this.gunMarker && this.gunMarker.visible) {
+      this.gunMarker.rotation.y += delta * 2.0;
+      this.gunMarker.position.y = 3.3 + Math.sin(performance.now() * 0.003) * 0.08;
+    }
+
+    // 8. 플레이어와의 거리 측정 & [Z] 키 상호작용 프롬프트 표시
+    const distDesk = Math.hypot(this.playerState.x - (-1.8), this.playerState.z - (-3.5));
+    const distGun = Math.hypot(this.playerState.x - (-13.0), this.playerState.z - 0.0);
+
+    const promptUI = document.getElementById('field-interact-prompt');
+    const promptText = document.getElementById('field-interact-text');
+
+    if (distDesk < 2.8) {
+      this.activeInteractable = 'desk';
+      if (promptUI && promptText) {
+        promptUI.classList.remove('hidden');
+        promptText.innerText = '임무 수배지 확인 (헬멧단 소탕)';
+      }
+    } else if (distGun < 3.2) {
+      this.activeInteractable = 'gun';
+      if (promptUI && promptText) {
+        promptUI.classList.remove('hidden');
+        promptText.innerText = this.hasGun ? '정실부 제식 소총 (이미 장착됨)' : '정실부 제식 볼트액션 소총 획득';
+      }
+    } else {
+      this.activeInteractable = null;
+      if (promptUI) {
+        promptUI.classList.add('hidden');
+      }
+    }
+
+    // 9. 3D 애니메이션 갱신 (이동, 달리기, 점프 전달)
     this.playerMob.update(delta, isMoving, isRunning, this.playerState.isJumping);
 
-    // 8. 하단 HUD 상태 갱신
+    // 10. 하단 HUD 상태 갱신
     const posHud = document.getElementById('field-pos-hud');
     if (posHud) {
       let stateLabel = '대기 (IDLE)';

@@ -219,6 +219,9 @@
         </div>
       </div>
       <div class="district-hud-right">
+        <div class="hud-squad-badge" id="hud-weapon-badge" style="border-color: #f59e0b; color: #fbbf24; background: rgba(245, 158, 11, 0.12); margin-right: 8px;">
+          <span>🔫 무장: 미장착 (맨손)</span>
+        </div>
         <div class="hud-squad-badge">
           <span>플레이어: 정실부 모브 (3D 1인)</span>
         </div>
@@ -228,12 +231,17 @@
     <!-- 3D 필드 WebGL 캔버스 컨테이너 -->
     <div id="field-canvas-container" class="field-canvas-container">
       <!-- Three.js 캔버스가 동적으로 삽입됨 -->
+      <!-- [Z] 키 상호작용 프롬프트 UI -->
+      <div id="field-interact-prompt" class="field-interact-prompt hidden">
+        <span class="interact-key">Z</span>
+        <span id="field-interact-text" class="interact-text">상호작용</span>
+      </div>
     </div>
 
     <!-- 하단 조작 안내 -->
     <div class="field-bottom-bar">
       <div class="district-canvas-hint">
-        🎮 이동: <strong>[W, A, S, D]</strong> | ⚡ 달리기: <strong>[Shift]</strong> | 🦘 점프: <strong>[Space]</strong> (부원들은 전원 출장 중)
+        🎮 이동: <strong>[W, A, S, D]</strong> | ⚡ 달리기: <strong>[Shift]</strong> | 🦘 점프: <strong>[Space]</strong> | 🔍 상호작용: <strong>[Z]</strong> (부원들은 전원 출장 중)
       </div>
       <div id="field-pos-hud" class="hud-stat field-stat-hud">
         상태: 대기 | 위치: X: 0.0, Z: 1.5
@@ -345,6 +353,35 @@
         </button>
         <button id="btn-quest-decline" class="btn-quest-btn decline" style="display: none;">
           <span>⏭ 건너뛰기</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 본부 탁자 위 임무 수배지 팝업 모달 (BOUNTY NOTICE) -->
+  <div id="bounty-modal" class="quest-modal-overlay hidden">
+    <div class="quest-modal-card bounty-card" style="border-color: #f59e0b; box-shadow: 0 0 35px rgba(245, 158, 11, 0.35);">
+      <div class="quest-modal-header" style="border-bottom-color: rgba(245, 158, 11, 0.35);">
+        <div class="terminal-badge" style="color: #fbbf24;">TRINITY JTF DISPATCH NOTICE</div>
+        <div class="quest-number" style="color: #fbbf24; border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.15);">임무 수배지 #01</div>
+      </div>
+      <div class="quest-modal-body">
+        <h2 class="quest-title" style="color: #fbbf24;">헬멧단 소탕의뢰</h2>
+        <div class="quest-divider"></div>
+        <p class="quest-desc">
+          트리니티 교정 외곽 보급로 부근에 '카타카타 헬멧단'의 무장 불량 세력이 출몰하여 학생들의 안전을 위협하고 있습니다. 외곽 정찰로를 개척하여 은신처를 파악하고, 최종적으로 헬멧단 두목을 진압하십시오.
+        </p>
+        <div class="quest-route-preview" style="border-left-color: #f59e0b;">
+          <div class="route-item accept-route">⚔️ <strong>[수락 시]</strong>: 총 4단계 순차 코스 개척 (최종 4코스: 💀 헬멧단 결전 확정)</div>
+          <div class="route-item decline-route">🧭 <strong>[거절/미선택 시]</strong>: 의뢰 없이 3갈래 자유 탐색로 개척</div>
+        </div>
+      </div>
+      <div class="quest-modal-actions">
+        <button id="btn-bounty-accept" class="btn-quest-btn accept" style="flex: 1.2; background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #fbbf24;">
+          <span>✔ 의뢰 수락 (4코스 개척)</span>
+        </button>
+        <button id="btn-bounty-decline" class="btn-quest-btn decline" style="flex: 1;">
+          <span>✖ 거절하고 나가기 (자유 탐색)</span>
         </button>
       </div>
     </div>

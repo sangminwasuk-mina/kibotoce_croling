@@ -173,19 +173,32 @@ window.AppController = {
     console.log('[FLOW] 4단계 -> 3단계: 자치구 대형 지도로 복귀');
     const fieldScreen = document.getElementById('field-screen');
     const districtScreen = document.getElementById('district-screen');
+
+    let missionChoice = null;
     if (fieldExplorerInstance) {
+      missionChoice = fieldExplorerInstance.missionChoice;
       fieldExplorerInstance.stop();
     }
     if (fieldScreen) fieldScreen.classList.add('hidden');
     if (districtScreen) {
       districtScreen.classList.remove('hidden');
       if (districtCrawlerInstance) {
+        // 본부 거점 클리어 처리
         const node = districtCrawlerInstance.nodes.find(n => n.id === 'node_jtf_hq');
         if (node) {
           node.status = 'cleared'; // 🟢 완료
         }
+
+        // 헬멧단 의뢰 수락 여부에 따른 노드 개척
+        if (missionChoice === 'helmet_gang') {
+          districtCrawlerInstance.setupHelmetGangCourse();
+        } else {
+          // 거절 또는 미선택 시: 3갈래 자유 탐색 노드 개척
+          districtCrawlerInstance.setupFreeExplorationBranches();
+        }
+
         districtCrawlerInstance.resize();
-        districtCrawlerInstance.updateHUDText('정의실현부 본부 실내 탐험 완료 (안전 구역)');
+        districtCrawlerInstance.centerOnNode('node_jtf_hq');
       }
     }
   }
