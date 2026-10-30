@@ -82,11 +82,13 @@ class SchaleFieldExplorer {
     this.scene.background = new THREE.Color(0xdbeafe); // 맑은 샬레 하늘빛 배경
     this.scene.fog = new THREE.FogExp2(0xdbeafe, 0.008);
 
-    const aspect = this.container.clientWidth / this.container.clientHeight;
+    const w = this.container.clientWidth || window.innerWidth || 1280;
+    const h = this.container.clientHeight || window.innerHeight || 720;
+    const aspect = w / h;
     this.camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 1000);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+    this.renderer.setSize(w, h);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -568,9 +570,12 @@ class SchaleFieldExplorer {
   setupPlayer() {
     this.player = new THREE.Group();
 
-    if (typeof createJTFMob3DModel === 'function') {
-      const mobMesh = createJTFMob3DModel();
-      this.player.add(mobMesh);
+    if (typeof JTFMob3D !== 'undefined' && typeof JTFMob3D.createMobObject === 'function') {
+      this.mobObject = JTFMob3D.createMobObject();
+      this.player.add(this.mobObject);
+    } else if (typeof createJTFMob3DModel === 'function') {
+      this.mobObject = createJTFMob3DModel();
+      this.player.add(this.mobObject);
     } else {
       // 대체 큐브
       const fallbackGeo = new THREE.BoxGeometry(1, 2, 1);
@@ -711,6 +716,13 @@ class SchaleFieldExplorer {
       }
     }
 
+    // 애니메이션 업데이트 (정실부 모브 보행/달리기/점프)
+    const isMoving = moveDir.lengthSq() > 0;
+    const isRunning = this.keys.sprint && isMoving;
+    if (this.mobObject && typeof this.mobObject.updateAnimation === 'function') {
+      this.mobObject.updateAnimation(delta, isMoving, isRunning, !this.isGrounded, !this.isGrounded);
+    }
+
     // 부드러운 회전 보간
     let diffYaw = this.targetYaw - this.playerYaw;
     while (diffYaw < -Math.PI) diffYaw += Math.PI * 2;
@@ -794,8 +806,8 @@ class SchaleFieldExplorer {
   // 화면 리사이즈
   onWindowResize() {
     if (!this.container || !this.camera || !this.renderer) return;
-    const w = this.container.clientWidth;
-    const h = this.container.clientHeight;
+    const w = this.container.clientWidth || window.innerWidth;
+    const h = this.container.clientHeight || window.innerHeight;
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h);
